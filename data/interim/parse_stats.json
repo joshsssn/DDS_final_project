@@ -1,0 +1,112 @@
+{
+  "page": {
+    "file": "frwiki-20261001-page.sql.gz",
+    "columns_in_dump": [
+      "page_id",
+      "page_namespace",
+      "page_title",
+      "page_is_redirect",
+      "page_is_new",
+      "page_random",
+      "page_touched",
+      "page_links_updated",
+      "page_latest",
+      "page_len",
+      "page_content_model",
+      "page_lang"
+    ],
+    "columns_kept": [
+      "page_id",
+      "page_namespace",
+      "page_title",
+      "page_is_redirect",
+      "page_latest"
+    ],
+    "row_filter": null,
+    "insert_statements": 1605,
+    "rows_in_dump": 14148116,
+    "rows_kept": 14148116,
+    "parquet_bytes": 256896157,
+    "seconds": 40.64
+  },
+  "pagelinks": {
+    "file": "frwiki-20261001-pagelinks.sql.gz",
+    "columns_in_dump": [
+      "pl_from",
+      "pl_from_namespace",
+      "pl_target_id"
+    ],
+    "columns_kept": [
+      "pl_from",
+      "pl_from_namespace",
+      "pl_target_id"
+    ],
+    "row_filter": null,
+    "insert_statements": 9384,
+    "rows_in_dump": 470370087,
+    "rows_kept": 470370087,
+    "parquet_bytes": 1424082234,
+    "seconds": 276.96
+  },
+  "linktarget": {
+    "file": "frwiki-20261001-linktarget.sql.gz",
+    "columns_in_dump": [
+      "lt_id",
+      "lt_namespace",
+      "lt_title"
+    ],
+    "columns_kept": [
+      "lt_id",
+      "lt_namespace",
+      "lt_title"
+    ],
+    "row_filter": null,
+    "insert_statements": 1231,
+    "rows_in_dump": 31672724,
+    "rows_kept": 31672724,
+    "parquet_bytes": 366382117,
+    "seconds": 47.16
+  },
+  "redirect": {
+    "file": "frwiki-20261001-redirect.sql.gz",
+    "columns_in_dump": [
+      "rd_from",
+      "rd_namespace",
+      "rd_title",
+      "rd_interwiki",
+      "rd_fragment"
+    ],
+    "columns_kept": [
+      "rd_from",
+      "rd_namespace",
+      "rd_title",
+      "rd_interwiki",
+      "rd_fragment"
+    ],
+    "row_filter": null,
+    "insert_statements": 92,
+    "rows_in_dump": 2071832,
+    "rows_kept": 2071832,
+    "parquet_bytes": 31132018,
+    "seconds": 5.34
+  },
+  "page_props": {
+    "file": "frwiki-20261001-page_props.sql.gz",
+    "columns_in_dump": [
+      "pp_page",
+      "pp_propname",
+      "pp_value",
+      "pp_sortkey"
+    ],
+    "columns_kept": [
+      "pp_page",
+      "pp_propname"
+    ],
+    "row_filter": "pp_propname = 'disambiguation'",
+    "insert_statements": 413,
+    "rows_in_dump": 8480889,
+    "rows_kept": 180169,
+    "parquet_bytes": 948251,
+    "seconds": 8.56
+  }
+}

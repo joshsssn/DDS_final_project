@@ -1,0 +1,24 @@
+17:57:27 analysis INFO start: largest SCC
+17:57:27 analysis INFO hubs: 1 requested, 0 to compute (2 BFS each)
+17:57:27 analysis INFO done: largest SCC in 0.0 s
+17:57:27 analysis INFO start: pairs
+17:57:28 analysis INFO pairs: 200000 in sample, 0 cached, 200000 to compute
+17:58:02 analysis INFO pairs: 20000 / 200000
+17:58:35 analysis INFO pairs: 40000 / 200000
+17:59:07 analysis INFO pairs: 60000 / 200000
+17:59:41 analysis INFO pairs: 80000 / 200000
+18:00:13 analysis INFO pairs: 100000 / 200000
+18:00:44 analysis INFO pairs: 120000 / 200000
+18:01:15 analysis INFO pairs: 140000 / 200000
+18:01:46 analysis INFO pairs: 160000 / 200000
+18:02:25 analysis INFO pairs: 180000 / 200000
+18:02:58 analysis INFO pairs: 200000 / 200000
+18:02:59 analysis INFO done: pairs in 332.4 s
+18:03:00 analysis INFO start: hub BFS
+18:03:00 analysis INFO hubs: 299 requested, 53 to compute (2 BFS each)
+18:03:46 analysis INFO hubs: 20 / 53
+18:04:19 analysis INFO hubs: 40 / 53
+18:04:40 analysis INFO done: hub BFS in 100.2 s
+18:04:40 analysis INFO start: hub metrics
+18:04:53 analysis INFO done: hub metrics in 13.0 s
+18:04:54 analysis INFO results written to C:\Users\Joshs\Desktop\lab\DDS Final Project\reports\generated\sample_seed69_n200000

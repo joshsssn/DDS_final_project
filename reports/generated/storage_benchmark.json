@@ -1,0 +1,35 @@
+{
+  "workload": {
+    "bfs_source": 618875,
+    "n_lookups": 1000
+  },
+  "csr": {
+    "build_s": 43.5651389999548,
+    "disk_bytes": 2026919022,
+    "rss_before_load_mb": 318.82421875,
+    "load_s": 5.475710300030187,
+    "rss_after_load_mb": 2579.78125,
+    "q1_fwd_bfs_s": 3.368095799931325,
+    "q2_rev_bfs_s": 3.335723500000313,
+    "q3_degrees_s": 6.490002851933241e-05,
+    "q4_lookups_s": 0.0004013000288978219,
+    "rss_peak_mb": 2802.13671875,
+    "reached_fwd": 2732071,
+    "reached_rev": 2782255
+  },
+  "duckdb": {
+    "build_s": 29.30389420001302,
+    "disk_bytes": 1531981824,
+    "rss_before_load_mb": 388.7421875,
+    "load_s": 0.023396700038574636,
+    "rss_after_load_mb": 393.62890625,
+    "q1_fwd_bfs_s": 9.366199400043115,
+    "q2_rev_bfs_s": 12.029264200013131,
+    "q3_degrees_s": 0.012367899995297194,
+    "q4_lookups_s": 1.5150889999931678,
+    "rss_peak_mb": 2498.6796875,
+    "reached_fwd": 2732071,
+    "reached_rev": 2782255,
+    "bfs_matches_numpy": true
+  }
+}

@@ -1,0 +1,37 @@
+15:39:31 analysis INFO start: largest SCC
+15:39:31 analysis INFO hubs: 1 requested, 1 to compute (2 BFS each)
+15:39:41 analysis INFO done: largest SCC in 10.3 s
+15:39:41 analysis INFO start: pairs
+15:39:41 analysis INFO pairs: 2000 in sample, 0 cached, 2000 to compute
+15:41:16 analysis INFO pairs: 200 / 2000
+15:42:47 analysis INFO pairs: 400 / 2000
+15:44:25 analysis INFO pairs: 600 / 2000
+15:46:00 analysis INFO pairs: 800 / 2000
+15:47:38 analysis INFO pairs: 1000 / 2000
+15:49:07 analysis INFO pairs: 1200 / 2000
+15:50:50 analysis INFO pairs: 1400 / 2000
+15:52:27 analysis INFO pairs: 1600 / 2000
+15:53:53 analysis INFO pairs: 1800 / 2000
+15:55:27 analysis INFO pairs: 2000 / 2000
+15:55:27 analysis INFO done: pairs in 946.3 s
+15:55:27 analysis INFO start: hub BFS
+15:55:27 analysis INFO hubs: 305 requested, 304 to compute (2 BFS each)
+15:56:15 analysis INFO hubs: 20 / 304
+15:57:03 analysis INFO hubs: 40 / 304
+15:57:50 analysis INFO hubs: 60 / 304
+15:58:37 analysis INFO hubs: 80 / 304
+15:59:28 analysis INFO hubs: 100 / 304
+16:00:19 analysis INFO hubs: 120 / 304
+16:01:10 analysis INFO hubs: 140 / 304
+16:01:58 analysis INFO hubs: 160 / 304
+16:57:15 analysis INFO hubs: 180 / 304
+16:58:03 analysis INFO hubs: 200 / 304
+16:58:44 analysis INFO hubs: 220 / 304
+16:59:25 analysis INFO hubs: 240 / 304
+17:00:07 analysis INFO hubs: 260 / 304
+17:00:48 analysis INFO hubs: 280 / 304
+17:01:29 analysis INFO hubs: 300 / 304
+17:01:37 analysis INFO done: hub BFS in 3970.0 s
+17:01:37 analysis INFO start: hub metrics
+17:01:47 analysis INFO done: hub metrics in 9.9 s
+17:01:48 analysis INFO results written to C:\Users\Joshs\Desktop\lab\DDS Final Project\reports\generated\sample_seed42_n2000

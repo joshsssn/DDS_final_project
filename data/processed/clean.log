@@ -1,0 +1,15 @@
+15:29:39 clean INFO start: pages
+15:29:40 clean INFO done: pages in 1.2 s
+15:29:40 clean INFO start: redirect resolution
+15:29:43 clean INFO done: redirect resolution in 2.6 s
+15:29:43 clean INFO start: classify link targets
+15:29:46 clean INFO done: classify link targets in 2.8 s
+15:29:46 clean INFO start: classify links
+15:30:02 clean INFO done: classify links in 16.8 s
+15:30:02 clean INFO start: extract edges
+15:30:15 clean INFO done: extract edges in 13.1 s
+15:30:15 clean INFO start: self-loops, duplicates, CSR
+15:36:13 clean INFO done: self-loops, duplicates, CSR in 357.7 s
+15:36:13 clean INFO start: nodes table
+15:36:15 clean INFO done: nodes table in 2.0 s
+15:36:15 clean INFO graph: 2782511 nodes, 235902925 edges

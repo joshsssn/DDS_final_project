@@ -1,0 +1,232 @@
+{
+  "seed": 42,
+  "n_pairs": 2000,
+  "top_k": 100,
+  "timings_s": {
+    "largest SCC": 0.01,
+    "pairs": 0.03,
+    "hub BFS": 0.02,
+    "hub metrics": 7.36
+  },
+  "graph": {
+    "nodes": 2782511,
+    "edges": 235902925,
+    "out_degree_quantiles": {
+      "0.25": 21.0,
+      "0.5": 40.0,
+      "0.75": 93.0,
+      "0.9": 203.0,
+      "0.99": 612.0
+    },
+    "in_degree_quantiles": {
+      "0.25": 4.0,
+      "0.5": 14.0,
+      "0.75": 59.0,
+      "0.9": 160.0,
+      "0.99": 863.0
+    },
+    "disambiguation_nodes": 180041
+  },
+  "largest_scc": {
+    "root_node": 618875,
+    "root_title": "Autorité_(sciences_de_l'information)",
+    "size": 2731950,
+    "share_of_nodes": 0.9818290026526401,
+    "is_largest_proven": true,
+    "reachable_from_root": 2732071,
+    "reaching_root": 2782255
+  },
+  "pairs": {
+    "n": 2000,
+    "reachable": 1978,
+    "unreachable": 22,
+    "unreachable_share": 0.011,
+    "distance_distribution": {
+      "2": 5,
+      "3": 374,
+      "4": 1146,
+      "5": 409,
+      "6": 41,
+      "7": 3
+    },
+    "mean_distance": 4.0586450960566225,
+    "median_distance": 4.0,
+    "both_in_largest_scc": 1951,
+    "unreachable_breakdown": {
+      "s_outside_lscc": 0,
+      "t_outside_lscc": 22,
+      "s_is_sink": 0,
+      "t_is_orphan": 17
+    }
+  },
+  "candidates": {
+    "union_size": 305,
+    "path_frequency_of_kth_candidate": 4,
+    "path_frequency_ties_at_kth": 48,
+    "top_out": 100,
+    "top_in": 100,
+    "top_path": 100,
+    "random_baseline": 50,
+    "overlap_out_in": 3,
+    "overlap_out_path": 7,
+    "overlap_in_path": 38,
+    "distinct_intermediate_nodes_on_sampled_paths": 4595
+  },
+  "hub_coverage": {
+    "min_coverage": 0.9,
+    "rankable": 305,
+    "total_pairs_s_cannot_reach_h": 0,
+    "total_pairs_h_cannot_reach_t": 0,
+    "not_rankable": 0,
+    "not_rankable_titles": []
+  },
+  "perceived_vs_real": {
+    "spearman_out_degree_vs_mean_detour_candidates": {
+      "rho": 0.27760444654788885,
+      "p_value": 6.796393457817411e-06,
+      "n": 255
+    },
+    "spearman_out_degree_vs_on_path_candidates": {
+      "rho": -0.36307602628890573,
+      "p_value": 2.3080669388431485e-09,
+      "n": 255
+    },
+    "spearman_in_degree_vs_mean_detour_candidates": {
+      "rho": -0.5788621970424417,
+      "p_value": 3.267894848366539e-24,
+      "n": 255
+    },
+    "spearman_in_degree_vs_on_path_candidates": {
+      "rho": 0.6943463773455891,
+      "p_value": 5.09189672823085e-38,
+      "n": 255
+    },
+    "spearman_out_degree_vs_mean_detour_all_evaluated": {
+      "rho": -0.15096673831645224,
+      "p_value": 0.008269901418996908,
+      "n": 305
+    },
+    "spearman_out_degree_vs_mean_detour_random_baseline": {
+      "rho": -0.5690065212990862,
+      "p_value": 1.6204048242441928e-05,
+      "n": 50
+    },
+    "top50_overlap_out_degree_vs_mean_detour": 2,
+    "top50_overlap_out_degree_vs_on_path": 2,
+    "mean_detour_by_group": {
+      "top_out_degree": {
+        "n": 100,
+        "n_rankable": 100,
+        "mean_of_mean_detour": 2.908382204246714,
+        "median_of_mean_detour": 3.0235085945399396,
+        "mean_on_path_rate": 0.007861476238624873,
+        "median_on_path_rate": 0.0005055611729019212
+      },
+      "top_in_degree": {
+        "n": 100,
+        "n_rankable": 100,
+        "mean_of_mean_detour": 2.0975075834175936,
+        "median_of_mean_detour": 1.9901415571284127,
+        "mean_on_path_rate": 0.027815975733063696,
+        "median_on_path_rate": 0.018958543983822043
+      },
+      "top_path_frequency": {
+        "n": 100,
+        "n_rankable": 100,
+        "mean_of_mean_detour": 1.6390697674418604,
+        "median_of_mean_detour": 1.5993427704752274,
+        "mean_on_path_rate": 0.03489888776541961,
+        "median_on_path_rate": 0.026794742163801823
+      },
+      "random_baseline": {
+        "n": 50,
+        "n_rankable": 50,
+        "mean_of_mean_detour": 3.9093629929221443,
+        "median_of_mean_detour": 3.9089989888776544,
+        "mean_on_path_rate": 6.0667340748230535e-05,
+        "median_on_path_rate": 0.0
+      }
+    },
+    "by_type_label": {
+      "city": {
+        "n": 16,
+        "n_rankable": 16,
+        "median_mean_detour": 1.7239635995955511,
+        "median_on_path_rate": 0.0262891809908999
+      },
+      "concept": {
+        "n": 8,
+        "n_rankable": 8,
+        "median_mean_detour": 2.2773003033367036,
+        "median_on_path_rate": 0.011880687563195148
+      },
+      "continent": {
+        "n": 2,
+        "n_rankable": 2,
+        "median_mean_detour": 1.4193629929221436,
+        "median_on_path_rate": 0.03943377148634985
+      },
+      "country": {
+        "n": 40,
+        "n_rankable": 40,
+        "median_mean_detour": 1.4388270980788676,
+        "median_on_path_rate": 0.033367037411526794
+      },
+      "discipline": {
+        "n": 6,
+        "n_rankable": 6,
+        "median_mean_detour": 1.8437815975733063,
+        "median_on_path_rate": 0.017189079878665317
+      },
+      "language": {
+        "n": 6,
+        "n_rankable": 6,
+        "median_mean_detour": 2.9400910010111225,
+        "median_on_path_rate": 0.002275025278058645
+      },
+      "list": {
+        "n": 67,
+        "n_rankable": 67,
+        "median_mean_detour": 2.992922143579373,
+        "median_on_path_rate": 0.0005055611729019212
+      },
+      "organisation": {
+        "n": 1,
+        "n_rankable": 1,
+        "median_mean_detour": 2.8816986855409503,
+        "median_on_path_rate": 0.0010111223458038423
+      },
+      "other": {
+        "n": 2,
+        "n_rankable": 2,
+        "median_mean_detour": 2.666835187057634,
+        "median_on_path_rate": 0.0010111223458038423
+      },
+      "period": {
+        "n": 42,
+        "n_rankable": 42,
+        "median_mean_detour": 1.7173913043478262,
+        "median_on_path_rate": 0.01693629929221436
+      },
+      "person": {
+        "n": 1,
+        "n_rankable": 1,
+        "median_mean_detour": 2.225985844287159,
+        "median_on_path_rate": 0.004044489383215369
+      },
+      "reference": {
+        "n": 61,
+        "n_rankable": 61,
+        "median_mean_detour": 2.5561172901921134,
+        "median_on_path_rate": 0.007583417593528817
+      },
+      "territory": {
+        "n": 3,
+        "n_rankable": 3,
+        "median_mean_detour": 1.814964610717897,
+        "median_on_path_rate": 0.03134479271991911
+      }
+    },
+    "unlabelled_candidates": 0
+  }
+}

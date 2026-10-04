@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bonus · Two searches, one path</title>
+<style>
+  /* Layout: the headline is the form ("From ___ to ___"), the graph is the page.
+     Palette: Wikipedia's own link colours. Blue = a link you can follow (search from the
+     start), purple = a visited link (search from the target), red = a link to nowhere. */
+  :root {
+    --bg: #ffffff; --surface: #f6f7f9; --rule: #d3d6db; --ink: #1c1d1f; --muted: #5d6268;
+    --link: #3056c8; --visited: #7a4fb5; --dead: #c8302c; --path: #101114; --halo: #ffffff;
+    --serif: "Linux Libertine", "Libertinus Serif", "Hoefler Text", Georgia, "Times New Roman", serif;
+    --sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, "SF Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0f1113; --surface: #181b1e; --rule: #33383e; --ink: #eceef1; --muted: #9aa1a9;
+            --link: #8fa9f5; --visited: #c3a6ee; --dead: #f2776f; --path: #ffffff; --halo: #0f1113; color-scheme: dark; }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--sans); }
+  main { max-width: 1180px; margin: 0 auto; padding: 22px 24px 56px; }
+  .kicker { font: 600 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+            display: flex; justify-content: space-between; gap: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--rule); }
+
+  /* the headline is the form */
+  form { margin: 26px 0 6px; }
+  h1 { font: 400 clamp(26px, 4.3vw, 46px)/1.25 var(--serif); margin: 0; letter-spacing: -.01em; display: flex; flex-wrap: wrap; align-items: baseline; gap: .12em .32em; }
+  .field { position: relative; display: inline-block; flex: 1 1 8em; min-width: 6em; max-width: 13em; }
+  .field input { width: 100%; font: inherit; color: var(--link); background: transparent; border: 0; border-bottom: 2px solid currentColor;
+                 padding: 0 2px 1px; outline: none; border-radius: 0; text-overflow: ellipsis; }
+  .field input::placeholder { color: color-mix(in srgb, currentColor 45%, transparent); }
+  .field.t input { color: var(--visited); }
+  .field input:focus { background: color-mix(in srgb, currentColor 9%, transparent); }
+  .field.unknown input { color: var(--dead); border-bottom-style: dashed; }
+  /* search results: a small index card under the field */
+  .suggest { position: absolute; z-index: 10; left: 0; top: calc(100% + 8px); width: min(540px, 90vw); background: var(--bg);
+             border: 1px solid var(--ink); box-shadow: 5px 5px 0 color-mix(in srgb, var(--ink) 14%, transparent);
+             font: 15px/1.3 var(--sans); letter-spacing: 0; color: var(--ink); text-align: left; }
+  .suggest[hidden] { display: none; }
+  .suggest .head { font: 600 10px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+                   padding: 11px 14px 7px; }
+  .suggest .head + .head, .suggest .row + .head { border-top: 1px solid var(--rule); }
+  .suggest .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 16px; align-items: baseline;
+                  padding: 7px 14px 8px; cursor: pointer; border-left: 3px solid transparent; }
+  .suggest .row .name { font: 400 19px/1.25 var(--serif); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .suggest .row .name b { font-weight: 700; }
+  .suggest .row .n { font: 11px/1 var(--mono); color: var(--muted); white-space: nowrap; }
+  .suggest .row .via { grid-column: 1 / -1; font: 11px/1.3 var(--mono); color: var(--muted); }
+  .suggest .row.on, .suggest .row:hover { background: var(--surface); border-left-color: var(--accent, var(--link)); }
+  .field.t .suggest { --accent: var(--visited); }
+  .suggest .none { padding: 4px 14px 12px; font: 400 17px/1.4 var(--serif); color: var(--dead); }
+  .suggest .foot { font: 10px/1 var(--mono); color: var(--muted); padding: 9px 14px; border-top: 1px solid var(--rule);
+                   display: flex; gap: 16px; flex-wrap: wrap; }
+  .suggest .foot kbd { font: inherit; border: 1px solid var(--rule); padding: 1px 4px; border-radius: 2px; color: var(--ink); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; align-items: center; }
+  button { font: 600 14px/1 var(--sans); padding: 10px 14px; border: 1px solid var(--rule); background: var(--bg); color: var(--ink); cursor: pointer; border-radius: 3px; }
+  button:hover { border-color: var(--ink); }
+  button:focus-visible, .field input:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  button.go { background: var(--ink); color: var(--bg); border-color: var(--ink); padding-inline: 20px; }
+  .hint { color: var(--muted); font-size: 13px; margin-left: 6px; flex: 1 1 260px; min-width: 0; }
+
+  /* the graph */
+  .stage { position: relative; margin-top: 18px; border-block: 1px solid var(--rule); }
+  canvas { display: block; width: 100%; height: clamp(360px, 58vh, 600px); cursor: default; }
+  .tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 13px; padding: 4px 8px; border-radius: 2px;
+         transform: translate(-50%, -150%); white-space: nowrap; }
+  .tip[hidden] { display: none; }
+
+  /* the answer */
+  .answer { display: grid; grid-template-columns: minmax(150px, 220px) 1fr; gap: 12px 40px; margin-top: 22px; align-items: start; }
+  .count { font: 400 clamp(64px, 11vw, 120px)/.86 var(--serif); letter-spacing: -.03em; font-variant-numeric: lining-nums; }
+  .count small { display: block; font: 600 11px/1.4 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-top: 12px; }
+  #status { font: 400 19px/1.45 var(--serif); margin: 4px 0 12px; min-height: 1.45em; text-wrap: balance; }
+  #status.dead { color: var(--dead); }
+  .route { font: 400 20px/1.6 var(--serif); margin: 0 0 4px; padding: 4px 0 4px 12px; border-left: 3px solid transparent; cursor: pointer; color: var(--muted); }
+  .route a { color: inherit; text-decoration: none; }
+  .route.sel { border-left-color: var(--path); color: var(--ink); }
+  .route.sel a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  .route.sel a:hover { text-decoration-thickness: 2px; }
+  .route i { font-style: normal; color: var(--muted); padding: 0 .28em; }
+  .facts { display: flex; flex-wrap: wrap; gap: 6px 28px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--rule);
+           font: 12px/1.6 var(--mono); color: var(--muted); }
+  .facts b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .facts .f b { color: var(--link); } .facts .b b { color: var(--visited); }
+  @media (max-width: 640px) { main { padding-inline: 16px; } .answer { grid-template-columns: 1fr; } .kicker span:last-child { display: none; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="kicker"><span>Bonus</span><span>French Wikipedia · 2,782,511 articles · 235,902,925 links</span></div>
+
+  <form id="form" autocomplete="off">
+    <h1>
+      <span>From</span>
+      <span class="field s"><input id="s" aria-label="Start article" placeholder="an article" spellcheck="false" role="combobox" aria-autocomplete="list"><div class="suggest" id="s-sug" hidden></div></span>
+      <span>to</span>
+      <span class="field t"><input id="t" aria-label="Target article" placeholder="another one" spellcheck="false" role="combobox" aria-autocomplete="list"><div class="suggest" id="t-sug" hidden></div></span>
+      <span>in as few clicks as possible.</span>
+    </h1>
+    <div class="actions">
+      <button class="go" type="submit">Find the path</button>
+      <button type="button" id="swap">Swap</button>
+      <button type="button" id="rand">Two random articles</button>
+      <button type="button" id="replay">Replay</button>
+      <span class="hint">Not sure of a title? Start typing: the search ignores accents, finds words inside titles and knows Wikipedia's redirects.</span>
+    </div>
+  </form>
+
+  <div class="stage">
+    <canvas id="cv" aria-label="Animated graph of the two searches"></canvas>
+    <div class="tip" id="tip" hidden></div>
+  </div>
+
+  <div class="answer">
+    <div class="count"><span id="n" style="opacity:.25">?</span><small id="n-l">clicks</small></div>
+    <div>
+      <p id="status">Loading an example…</p>
+      <div id="routes"></div>
+      <div class="facts">
+        <span class="f">reached from the start <b id="k-f">–</b></span>
+        <span class="b">reached from the target <b id="k-b">–</b></span>
+        <span>search time <b id="k-ms">–</b></span>
+        <span>share of Wikipedia looked at <b id="k-sh">–</b></span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const fmt = n => Math.round(n).toLocaleString("en-US");
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const cv = $("cv"), ctx = cv.getContext("2d");
+let W = 0, H = 0, C = {}, G = null, runId = 0, hover = null;
+
+function resize() {
+  const r = cv.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+  W = r.width; H = r.height; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  C = { bg: css("--bg"), ink: css("--ink"), muted: css("--muted"), rule: css("--rule"), f: css("--link"), b: css("--visited"),
+        dead: css("--dead"), path: css("--path"), halo: css("--halo"), serif: css("--serif"), mono: css("--mono") };
+}
+addEventListener("resize", () => { resize(); if (G) place(G); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", resize);
+
+// ---------- article search ------------------------------------------------------------------
+const fold = t => t.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/_/g, " ").replace(/’/g, "'").trim();
+const GROUPS = { exact: "Articles", prefix: "Articles", word: "Title contains", close: "Did you mean", idea: "Not sure? A few ideas" };
+
+function searchBox(input, box) {
+  const field = input.closest(".field");
+  let items = [], rows = [], on = -1, timer, seq = 0;
+  const close = () => { box.hidden = true; on = -1; };
+  const paint = () => rows.forEach((r, i) => r.classList.toggle("on", i === on));
+  const pick = it => { input.value = it.title; field.classList.remove("unknown"); close(); };
+  const mark = (title, q) => {                         // bold the part that was typed
+    const span = document.createElement("span"); span.className = "name";
+    const at = q ? fold(title).indexOf(q) : -1;
+    if (at < 0 || fold(title).length !== title.length) { span.textContent = title; return span; }
+    span.append(title.slice(0, at)); const b = document.createElement("b"); b.textContent = title.slice(at, at + q.length);
+    span.append(b, title.slice(at + q.length)); return span;
+  };
+  function show(list, query, empty) {
+    items = list; rows = []; box.innerHTML = ""; on = -1;
+    const q = fold(query || ""); let group = "";
+    if (!list.length) {
+      const h = document.createElement("div"); h.className = "head"; h.textContent = "No match";
+      const n = document.createElement("div"); n.className = "none"; n.textContent = empty || `Nothing looks like “${query}”. Try fewer letters.`;
+      box.append(h, n);
+    }
+    list.forEach(it => {
+      if (GROUPS[it.kind] !== group) { group = GROUPS[it.kind]; const h = document.createElement("div"); h.className = "head"; h.textContent = group; box.appendChild(h); }
+      const r = document.createElement("div"); r.className = "row";
+      const n = document.createElement("span"); n.className = "n"; n.textContent = fmt(it.links_in) + " links in";
+      r.append(mark(it.title, it.via ? "" : q), n);
+      if (it.via) { const v = document.createElement("span"); v.className = "via"; v.textContent = `“${it.via}” redirects here`; r.appendChild(v); }
+      r.onmousedown = e => { e.preventDefault(); pick(it); };
+      box.appendChild(r); rows.push(r);
+    });
+    const f = document.createElement("div"); f.className = "foot";
+    f.innerHTML = "<span><kbd>↑</kbd> <kbd>↓</kbd> choose</span><span><kbd>Enter</kbd> select</span><span><kbd>Esc</kbd> close</span>";
+    box.appendChild(f); box.hidden = false;
+  }
+  async function query() {
+    const q = input.value.trim(), me = ++seq;
+    const res = await (await fetch(q ? "/api/search?q=" + encodeURIComponent(q) : "/api/suggest")).json();
+    if (me !== seq || document.activeElement !== input) return;
+    show(res, q);
+  }
+  input.addEventListener("input", () => { field.classList.remove("unknown"); clearTimeout(timer); timer = setTimeout(query, 90); });
+  input.addEventListener("focus", () => { input.select(); query(); });
+  input.addEventListener("keydown", e => {
+    if (box.hidden) return;
+    if (e.key === "ArrowDown") { on = (on + 1) % rows.length; paint(); e.preventDefault(); }
+    else if (e.key === "ArrowUp") { on = (on - 1 + rows.length) % rows.length; paint(); e.preventDefault(); }
+    else if (e.key === "Enter" && on >= 0) { pick(items[on]); e.preventDefault(); }
+    else if (e.key === "Enter" && items.length && items[0].kind !== "idea" && items[0].kind !== "exact") { pick(items[0]); e.preventDefault(); }
+    else if (e.key === "Escape") close();
+  });
+  input.addEventListener("blur", () => {
+    seq++; close();
+    const q = fold(input.value);                         // a title that does not exist reads like a red link
+    if (q && items.length && items[0].kind !== "idea") field.classList.toggle("unknown", !items.some(it => it.kind === "exact"));
+  });
+  return { show, field };
+}
+const boxes = { s: searchBox($("s"), $("s-sug")), t: searchBox($("t"), $("t-sug")) };
+
+// ---------- the graph: a small force simulation on canvas ----------------------------------
+const RULER = 66, TOPM = 40;
+const pad = () => W < 640 ? 44 : 120;
+const colX = (g, c) => pad() + c * (W - 2 * pad()) / g.width;
+const midY = () => TOPM + (H - RULER - TOPM) / 2;
+
+// Every page gets a resting place: its column is its number of clicks, and inside a
+// column pages are ordered like their parents, so links cross as little as possible.
+function place(g) {
+  const cols = new Map(), my = midY(), room = H - RULER - TOPM - 30;
+  for (const n of g.nodes.values()) { if (!cols.has(n.col)) cols.set(n.col, []); cols.get(n.col).push(n); }
+  const slot = c => {
+    const list = cols.get(c); if (!list) return;
+    list.forEach(n => { const par = g.nodes.get(n.parent); n.key = par && par.ty !== undefined ? par.ty : my; });
+    list.sort((a, b) => a.key - b.key || a.seed - b.seed);
+    const gap = Math.min(26, room / Math.max(1, list.length - 1));
+    list.forEach((n, i) => {
+      n.ty = n.pin ? my : my + (i - (list.length - 1) / 2) * gap;
+      n.tx = n.pin ? colX(g, c) : colX(g, c) + (n.jit - .5) * Math.min(90, (W - 2 * pad()) / g.width * .5);
+    });
+  };
+  const split = g.d.distance === null ? g.width : g.d.levels_start;
+  for (let c = g.width; c > split; c--) slot(c);      // target side first, towards the middle
+  for (let c = 0; c <= split; c++) slot(c);           // then the start side
+}
+
+function build(d) {
+  const g = { d, width: d.width, nodes: new Map(), edges: [], rings: [], sel: 0, dim: 0, done: false, pulse: 0, counts: {} };
+  for (const [id, n] of Object.entries(d.nodes))
+    g.nodes.set(+id, { id: +id, ...n, x: 0, y: 0, vx: 0, vy: 0, born: -1, hot: false, pin: false, seed: Math.random(), jit: Math.random() });
+  for (const [a, b] of d.edges) g.edges.push({ a: g.nodes.get(a), b: g.nodes.get(b), born: -1, hot: false });
+  g.nodes.get(d.start).pin = g.nodes.get(d.target).pin = true;
+  place(g);
+  for (const n of g.nodes.values()) if (n.pin) { n.x = n.tx; n.y = n.ty; }
+  return g;
+}
+
+function spawn(g, n, now) {
+  const p = g.nodes.get(n.parent);
+  if (!n.pin) { n.x = p ? p.x : n.tx; n.y = p ? p.y : n.ty; n.vx = n.vy = 0; }   // pages grow out of their parent
+  n.born = now;
+  for (const e of g.edges) if (e.born < 0 && e.a.born >= 0 && e.b.born >= 0) e.born = now;
+}
+
+function physics(g, now) {
+  const my = midY();
+  for (const n of g.nodes.values()) {
+    if (n.born < 0) continue;
+    const tx = n.hot || n.pin ? colX(g, n.col) : n.tx;
+    let ty = n.hot || n.pin ? my : n.ty;
+    if (!n.hot && !n.pin && g.done && Math.abs(ty - my) < 30) ty = my + (ty < my ? -30 : 30);   // make room for the path
+    const drift = reduce || n.hot || n.pin ? 0 : Math.sin(now / 1400 + n.seed * 40) * 2.2;       // the graph breathes
+    n.vx = (n.vx + (tx - n.x) * .035) * .8; n.vy = (n.vy + (ty + drift - n.y) * .035) * .8;
+    n.x += n.vx; n.y += n.vy;
+  }
+}
+
+const ease = t => 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3);
+const back = t => { t = Math.min(1, Math.max(0, t)); const c = 2.2; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
+function curve(a, b, p) {                                 // partial horizontal bezier from a to b
+  const mx = (a.x + b.x) / 2; ctx.beginPath(); ctx.moveTo(a.x, a.y);
+  if (p >= 1) { ctx.bezierCurveTo(mx, a.y, mx, b.y, b.x, b.y); return; }
+  const steps = 14;
+  for (let i = 1; i <= steps * p; i++) { const t = i / steps, u = 1 - t;
+    ctx.lineTo(u*u*u*a.x + 3*u*u*t*mx + 3*u*t*t*mx + t*t*t*b.x, u*u*u*a.y + 3*u*u*t*a.y + 3*u*t*t*b.y + t*t*t*b.y); }
+}
+function pointOn(a, b, t) { const mx = (a.x + b.x) / 2, u = 1 - t;
+  return [u*u*u*a.x + 3*u*u*t*mx + 3*u*t*t*mx + t*t*t*b.x, u*u*u*a.y + 3*u*u*t*a.y + 3*u*t*t*b.y + t*t*t*b.y]; }
+const colour = n => n.side === "f" ? C.f : n.side === "b" ? C.b : C.ink;
+
+function draw() {
+  requestAnimationFrame(draw);
+  const now = performance.now();
+  if (!G) { ctx.clearRect(0, 0, W, H); return; }
+  const g = G;
+  g.clock = g.clock || now;                                // fixed 60 Hz steps, whatever the frame rate
+  for (let k = 0; g.clock < now && k < 240; k++, g.clock += 16.7) {
+    physics(g, g.clock);
+    g.dim += ((g.done && g.d.distance !== null ? 1 : 0) - g.dim) * .06;
+  }
+  if (g.clock < now) g.clock = now;
+  ctx.clearRect(0, 0, W, H);
+  const fade = 1 - .6 * g.dim;
+
+  // ruler: one column per click, with the real number of pages found there
+  ctx.textAlign = "center"; ctx.lineWidth = 1;
+  for (let c = 0; c <= g.width; c++) {
+    const x = colX(g, c), y = H - RULER;
+    ctx.strokeStyle = C.rule; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 7); ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.font = `600 10px ${C.mono}`;
+    const narrow = (W - 2 * pad()) / g.width < 96;
+    const name = c === 0 ? "START" : c === g.width ? "TARGET" : g.d.distance === null ? "" : narrow ? String(c) : c + (c > 1 ? " CLICKS" : " CLICK");
+    ctx.fillText(name, x, y + 21);
+    const k = g.counts[c]; if (!k) continue;
+    ctx.font = `12px ${C.mono}`;
+    const parts = [["f", C.f], ["b", C.b]].filter(([s]) => k[s]);
+    parts.forEach(([s, col], i) => {
+      const a = ease((now - k[s].born) / 500); ctx.globalAlpha = a; ctx.fillStyle = col;
+      ctx.fillText("+" + fmt(k[s].n * a) + (narrow ? "" : k[s].n > 1 ? " pages" : " page"), x, y + 38 + i * 15);
+    });
+    ctx.globalAlpha = 1;
+  }
+  ctx.strokeStyle = C.rule; ctx.beginPath(); ctx.moveTo(0, H - RULER + .5); ctx.lineTo(W, H - RULER + .5); ctx.stroke();
+
+  // wavefronts
+  for (const r of g.rings) {
+    const t = (now - r.born) / 1100; if (t > 1) continue;
+    ctx.globalAlpha = (1 - t) * .5; ctx.strokeStyle = r.c; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(r.x, r.y, 12 + ease(t) * r.R, 0, 7); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  // links
+  for (const e of g.edges) {
+    if (e.born < 0 || e.hot) continue;
+    const p = ease((now - e.born) / 520), from = e.a.side === "b" && e.b.born <= e.a.born ? e.b : e.a, to = from === e.a ? e.b : e.a;
+    ctx.globalAlpha = .34 * fade; ctx.strokeStyle = colour(e.a.side === "m" ? e.b : e.a); ctx.lineWidth = 1;
+    curve(from, to, p); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  for (const e of g.edges) {
+    if (!e.hot) continue;
+    const p = ease((now - e.hotAt) / 420);
+    ctx.strokeStyle = C.path; ctx.lineWidth = 3; ctx.lineCap = "round"; curve(e.a, e.b, p); ctx.stroke();
+  }
+
+  // pages
+  for (const n of g.nodes.values()) {
+    if (n.born < 0) continue;
+    const k = back((now - n.born) / 460), end = n.pin, r = (n.hot ? 6.5 : end ? 7 : 3.2) * k;
+    ctx.globalAlpha = n.hot || end ? 1 : fade * .95;
+    ctx.fillStyle = n.hot ? C.path : colour(n);
+    ctx.beginPath(); ctx.arc(n.x, n.y, Math.max(0, r), 0, 7); ctx.fill();
+    if (n.hot || end) { ctx.lineWidth = 2; ctx.strokeStyle = C.halo; ctx.stroke(); ctx.lineWidth = end ? 2 : 0;
+      if (end) { ctx.strokeStyle = n === g.nodes.get(g.d.start) ? C.f : C.b; ctx.beginPath(); ctx.arc(n.x, n.y, r + 4, 0, 7); ctx.stroke(); } }
+  }
+  ctx.globalAlpha = 1;
+
+  // a dot that keeps walking the chosen path
+  const path = g.done && g.d.paths[g.sel];
+  if (path && path.length > 1 && !reduce) {
+    g.pulse = (g.pulse + .0045 * (path.length - 1)) % (path.length - 1 + .6);
+    const i = Math.floor(g.pulse);
+    if (i < path.length - 1) {
+      const [x, y] = pointOn(g.nodes.get(path[i]), g.nodes.get(path[i + 1]), g.pulse - i);
+      ctx.fillStyle = C.halo; ctx.beginPath(); ctx.arc(x, y, 6, 0, 7); ctx.fill();
+      ctx.fillStyle = C.f; ctx.beginPath(); ctx.arc(x, y, 3.6, 0, 7); ctx.fill();
+    }
+  }
+
+  // titles: start, target and the chosen path
+  ctx.textAlign = "center"; ctx.lineJoin = "round";
+  let idx = 0;
+  for (const n of g.nodes.values()) {
+    if (n.born < 0 || !(n.hot || n.pin)) continue;
+    const a = ease((now - Math.max(n.born, n.hotAt || 0)) / 500), up = n.pin || (n.col % 2 === 1);
+    ctx.globalAlpha = a; ctx.font = `${n.pin ? 600 : 400} ${W < 640 ? 13 : 16}px ${C.serif}`;
+    const label = n.title.length > 30 ? n.title.slice(0, 29) + "…" : n.title, y = n.y + (up ? -18 : 29);
+    const x = Math.max(ctx.measureText(label).width / 2 + 6, Math.min(W - ctx.measureText(label).width / 2 - 6, n.x));
+    ctx.strokeStyle = C.halo; ctx.lineWidth = 5; ctx.strokeText(label, x, y);
+    ctx.fillStyle = C.ink; ctx.fillText(label, x, y); idx++;
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ---------- choreography ------------------------------------------------------------------------
+const wait = ms => new Promise(r => setTimeout(r, reduce ? 0 : ms));
+function tick(el, to, ms = 700) {
+  const from = +(el.dataset.v || 0), t0 = performance.now(); el.dataset.v = to;
+  const step = now => { const p = reduce ? 1 : ease((now - t0) / ms); el.textContent = fmt(from + (to - from) * p); if (p < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+
+function choose(g, k) {
+  g.sel = k; const p = g.d.paths[k], now = performance.now();
+  for (const n of g.nodes.values()) n.hot = false;
+  for (const e of g.edges) e.hot = false;
+  p.forEach(id => { const n = g.nodes.get(id); n.hot = true; n.hotAt = now; });
+  for (const e of g.edges) { const i = p.indexOf(e.a.id); if (i >= 0 && p[i + 1] === e.b.id) { e.hot = true; e.hotAt = now; } }
+  [...$("routes").children].forEach((el, i) => el.classList.toggle("sel", i === k));
+}
+
+async function play(d) {
+  const me = ++runId, g = build(d); G = g;
+  const st = $("status"); st.className = ""; $("routes").innerHTML = ""; $("n").textContent = "?"; $("n").style.opacity = .25; $("n-l").textContent = "clicks";
+  ["k-f", "k-b"].forEach(id => { $(id).dataset.v = 1; $(id).textContent = "1"; });
+  $("k-ms").textContent = d.search_ms.toFixed(1) + " ms"; $("k-sh").textContent = "–";
+  let now = performance.now(), f = 1, b = 1;
+  spawn(g, g.nodes.get(d.start), now); spawn(g, g.nodes.get(d.target), now);
+  st.textContent = `Both searches start: one at ${d.nodes[d.start].title}, one at ${d.nodes[d.target].title}.`;
+  await wait(700);
+
+  for (const s of d.steps) {
+    if (me !== runId) return;
+    if (!s.size) continue;                                   // a search that found nothing new
+    const col = s.side === "f" ? s.level : g.width - s.level, root = g.nodes.get(s.side === "f" ? d.start : d.target);
+    now = performance.now();
+    g.rings.push({ x: root.x, y: root.y, born: now, c: s.side === "f" ? C.f : C.b, R: Math.abs(colX(g, col) - root.x) + 30 });
+    (g.counts[col] ||= {})[s.side] = { n: s.size, born: now + 250 };
+    const batch = [...g.nodes.values()].filter(n => n.born < 0 && n.col === col && (n.side === s.side || n.side === "m" || n.path));
+    batch.forEach((n, i) => setTimeout(() => { if (me === runId) spawn(g, n, performance.now()); }, reduce ? 0 : 120 + i * (560 / batch.length)));
+    if (s.side === "f") { f += s.size; tick($("k-f"), f); } else { b += s.size; tick($("k-b"), b); }
+    const clicks = s.level + (s.level > 1 ? " clicks" : " click");
+    st.textContent = s.side === "f"
+      ? `From ${d.nodes[d.start].title}: ${fmt(s.size)} new page${s.size > 1 ? "s" : ""} ${clicks} away.`
+      : `Towards ${d.nodes[d.target].title}: ${fmt(s.size)} new page${s.size > 1 ? "s" : ""} that lead${s.size > 1 ? "" : "s"} there in ${clicks}.`;
+    await wait(1250);
+  }
+  if (me !== runId) return;
+  now = performance.now();
+  for (const n of g.nodes.values()) if (n.born < 0) spawn(g, n, now);
+  $("k-sh").textContent = (100 * (d.explored_start + d.explored_target) / d.articles).toFixed(2) + "%";
+
+  if (d.distance === null) {
+    $("n").textContent = "∞"; $("n").style.opacity = 1; $("n-l").textContent = "no path"; st.className = "dead"; g.done = true;
+    const side = d.steps.length && d.steps.at(-1).size === 0 ? d.steps.at(-1).side : (d.levels_target === 0 || d.explored_target < d.explored_start ? "b" : "f");
+    const T = d.nodes[d.target].title, S = d.nodes[d.start].title;
+    st.textContent = d.explored_target === 1 ? `No path. No other article links to ${T}, so nothing can lead there.`
+      : d.explored_start === 1 ? `No path. ${S} links to no other article.`
+      : side === "b"
+      ? `No path. Only ${fmt(d.explored_target)} page${d.explored_target > 1 ? "s" : ""} can reach ${d.nodes[d.target].title}, and none of them is reachable from ${d.nodes[d.start].title}.`
+      : `No path. ${d.nodes[d.start].title} leads to only ${fmt(d.explored_start)} page${d.explored_start > 1 ? "s" : ""}, and none of them reaches ${d.nodes[d.target].title}.`;
+    return;
+  }
+
+  const p = d.paths[0];
+  for (let i = 0; i < p.length; i++) {                     // light the path one click at a time
+    if (me !== runId) return;
+    const n = g.nodes.get(p[i]); n.hot = true; n.hotAt = performance.now();
+    if (i) for (const e of g.edges) if (e.a.id === p[i - 1] && e.b.id === p[i]) { e.hot = true; e.hotAt = performance.now(); }
+    await wait(330);
+  }
+  g.done = true;
+  $("n").textContent = d.distance; $("n").style.opacity = 1; $("n-l").textContent = d.distance === 1 ? "click" : "clicks";
+  st.textContent = d.distance === 0 ? "Start and target are the same page."
+    : `The two searches met on ${fmt(d.meeting_pages)} page${d.meeting_pages > 1 ? "s" : ""}` +
+      (d.paths.length > 1 ? `. Here are ${d.paths.length} of the shortest routes; pick one to trace it.` : ".");
+  d.paths.forEach((path, k) => {
+    const row = document.createElement("p"); row.className = "route";
+    path.forEach((id, i) => {
+      if (i) { const s = document.createElement("i"); s.textContent = "→"; row.appendChild(s); }
+      const a = document.createElement("a");
+      a.textContent = d.nodes[id].title; a.target = "_blank"; a.rel = "noopener";
+      a.href = "https://fr.wikipedia.org/wiki/" + encodeURIComponent(d.nodes[id].raw);
+      a.onclick = e => { if (!row.classList.contains("sel")) e.preventDefault(); };
+      row.appendChild(a);
+    });
+    row.onclick = () => choose(g, k);
+    $("routes").appendChild(row);
+  });
+  choose(g, 0);
+}
+
+let last = null;
+async function solve() {
+  const s = $("s").value.trim(), t = $("t").value.trim();
+  if (!s || !t) { $("status").className = "dead"; $("status").textContent = "Type a start and a target article first."; return; }
+  const me = ++runId;
+  const d = await (await fetch(`/api/path?s=${encodeURIComponent(s)}&t=${encodeURIComponent(t)}`)).json();
+  if (me !== runId) return;
+  if (d.error) {
+    $("status").className = "dead";
+    $("status").textContent = d.error + (d.suggestions && d.suggestions.length ? " Pick one of the suggestions under the field." : "");
+    if (d.field) {                                        // open the search card on the field that failed
+      const b = boxes[d.field]; b.field.classList.add("unknown"); $(d.field).focus();
+      setTimeout(() => b.show(d.suggestions || [], $(d.field).value), 250);
+    }
+    return;
+  }
+  boxes.s.field.classList.remove("unknown"); boxes.t.field.classList.remove("unknown");
+  $("s").value = d.nodes[d.start].title; $("t").value = d.nodes[d.target].title;
+  history.replaceState(null, "", `?s=${encodeURIComponent($("s").value)}&t=${encodeURIComponent($("t").value)}`);
+  last = d; play(d);
+}
+
+// hover and click on pages
+cv.addEventListener("mousemove", e => {
+  if (!G) return;
+  const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; let best = null, bd = 196;
+  for (const n of G.nodes.values()) { if (n.born < 0) continue; const d2 = (n.x - x) ** 2 + (n.y - y) ** 2; if (d2 < bd) { bd = d2; best = n; } }
+  hover = best; cv.style.cursor = best ? "pointer" : "default";
+  const tip = $("tip"); tip.hidden = !best || best.hot || best.pin;
+  if (best) { tip.textContent = best.title; tip.style.left = best.x + "px"; tip.style.top = best.y + "px"; }
+});
+cv.addEventListener("mouseleave", () => { hover = null; $("tip").hidden = true; });
+cv.addEventListener("click", () => { if (hover) open("https://fr.wikipedia.org/wiki/" + encodeURIComponent(hover.raw), "_blank", "noopener"); });
+
+$("form").addEventListener("submit", e => { e.preventDefault(); solve(); });
+$("swap").onclick = () => { [$("s").value, $("t").value] = [$("t").value, $("s").value]; solve(); };
+$("rand").onclick = async () => { const p = await (await fetch("/api/random")).json(); $("s").value = p.s; $("t").value = p.t; solve(); };
+$("replay").onclick = () => { if (last) play(last); };
+
+resize(); requestAnimationFrame(draw);
+const qs = new URLSearchParams(location.search);
+$("s").value = qs.get("s") || "Zouaves"; $("t").value = qs.get("t") || "Flower Fairies (Cicely Mary Barker)";
+solve();
+</script>
+</body>
+</html>

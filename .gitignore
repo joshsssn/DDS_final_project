@@ -1,0 +1,39 @@
+# Environment and caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+*.egg-info/
+.vscode/
+.DS_Store
+Thumbs.db
+docs/
+
+# Data: several GB, re-obtained with `uv run python run.py all`.
+# Only the small evidence files (sizes, checksums, counts, logs) are versioned.
+data/raw/*
+!data/raw/manifest.json
+!data/raw/*-sha1sums.txt
+!data/raw/*-dumpstatus.json
+data/interim/*
+!data/interim/parse_stats.json
+!data/interim/independent_row_counts.txt
+data/processed/*
+!data/processed/quality.json
+!data/processed/analysis.log
+!data/processed/analysis_n200000.log
+!data/processed/analysis_seed69.log
+!data/processed/clean.log
+
+# LaTeX build files (report/report.pdf and report/slides.pdf are versioned)
+report/*.nav
+report/*.snm
+report/*.vrb
+report/*.aux
+report/*.log
+report/*.out
+report/*.toc
+report/*.fls
+report/*.fdb_latexmk
+report/*.synctex.gz

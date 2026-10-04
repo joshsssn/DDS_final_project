@@ -1,0 +1,299 @@
+{
+  "timings_s": {
+    "pages": 1.22,
+    "redirect resolution": 2.63,
+    "classify link targets": 2.78,
+    "classify links": 16.77,
+    "extract edges": 13.07,
+    "self-loops, duplicates, CSR": 357.71,
+    "nodes table": 2.0
+  },
+  "pages_per_namespace": [
+    {
+      "namespace": 3,
+      "pages": 4743201,
+      "redirects": 26849
+    },
+    {
+      "namespace": 0,
+      "pages": 4627118,
+      "redirects": 1844607
+    },
+    {
+      "namespace": 1,
+      "pages": 2729309,
+      "redirects": 107631
+    },
+    {
+      "namespace": 14,
+      "pages": 723313,
+      "redirects": 395
+    },
+    {
+      "namespace": 2,
+      "pages": 581713,
+      "redirects": 45205
+    },
+    {
+      "namespace": 10,
+      "pages": 264935,
+      "redirects": 12834
+    },
+    {
+      "namespace": 2600,
+      "pages": 107923,
+      "redirects": 0
+    },
+    {
+      "namespace": 6,
+      "pages": 79492,
+      "redirects": 278
+    },
+    {
+      "namespace": 4,
+      "pages": 66678,
+      "redirects": 10546
+    },
+    {
+      "namespace": 100,
+      "pages": 62464,
+      "redirects": 6693
+    },
+    {
+      "namespace": 102,
+      "pages": 57629,
+      "redirects": 5290
+    },
+    {
+      "namespace": 828,
+      "pages": 42513,
+      "redirects": 54
+    },
+    {
+      "namespace": 15,
+      "pages": 21506,
+      "redirects": 2527
+    },
+    {
+      "namespace": 103,
+      "pages": 9966,
+      "redirects": 1998
+    },
+    {
+      "namespace": 11,
+      "pages": 9562,
+      "redirects": 1579
+    },
+    {
+      "namespace": 5,
+      "pages": 8950,
+      "redirects": 1711
+    },
+    {
+      "namespace": 101,
+      "pages": 5212,
+      "redirects": 2399
+    },
+    {
+      "namespace": 104,
+      "pages": 1864,
+      "redirects": 211
+    },
+    {
+      "namespace": 12,
+      "pages": 1624,
+      "redirects": 806
+    },
+    {
+      "namespace": 8,
+      "pages": 1581,
+      "redirects": 10
+    },
+    {
+      "namespace": 13,
+      "pages": 614,
+      "redirects": 141
+    },
+    {
+      "namespace": 829,
+      "pages": 245,
+      "redirects": 26
+    },
+    {
+      "namespace": 7,
+      "pages": 212,
+      "redirects": 4
+    },
+    {
+      "namespace": 9,
+      "pages": 206,
+      "redirects": 24
+    },
+    {
+      "namespace": 105,
+      "pages": 151,
+      "redirects": 8
+    },
+    {
+      "namespace": 1728,
+      "pages": 128,
+      "redirects": 4
+    },
+    {
+      "namespace": 1729,
+      "pages": 6,
+      "redirects": 1
+    },
+    {
+      "namespace": 710,
+      "pages": 1,
+      "redirects": 0
+    }
+  ],
+  "pages_total": 14148116,
+  "disambiguation": {
+    "pages_flagged": 180169,
+    "flagged_articles": 180041,
+    "flagged_ns0_redirects": 82,
+    "flagged_missing_page": 0
+  },
+  "articles": 2782511,
+  "redirects": {
+    "ns0_redirect_pages": 1844607,
+    "status_counts": {
+      "resolved": 1844454,
+      "target_other_namespace": 149,
+      "interwiki": 3,
+      "broken": 1
+    },
+    "chain_length_distribution_resolvable": {
+      "1": 1844357,
+      "2": 91,
+      "3": 6
+    },
+    "double_redirects_(chain_length>=2)": 97,
+    "with_section_fragment": 62693,
+    "max_depth_policy": 5
+  },
+  "linktarget": {
+    "rows": 31672724,
+    "by_class": {
+      "other_namespace": 18812287,
+      "red_link": 8972646,
+      "article": 2779560,
+      "redirect_resolved": 1108121,
+      "redirect_target_other_namespace": 106,
+      "redirect_interwiki": 3,
+      "redirect_broken": 1
+    }
+  },
+  "links": {
+    "rows": 470370087,
+    "by_source_and_target_class": [
+      {
+        "source": "source_article",
+        "target": "article",
+        "n": 228032774
+      },
+      {
+        "source": "source_other_namespace",
+        "target": "other_namespace",
+        "n": 154119133
+      },
+      {
+        "source": "source_article",
+        "target": "red_link",
+        "n": 27000122
+      },
+      {
+        "source": "source_other_namespace",
+        "target": "article",
+        "n": 25284764
+      },
+      {
+        "source": "source_article",
+        "target": "other_namespace",
+        "n": 17180988
+      },
+      {
+        "source": "source_article",
+        "target": "redirect_resolved",
+        "n": 10729947
+      },
+      {
+        "source": "source_other_namespace",
+        "target": "red_link",
+        "n": 3759115
+      },
+      {
+        "source": "source_other_namespace",
+        "target": "redirect_resolved",
+        "n": 2404239
+      },
+      {
+        "source": "source_is_redirect",
+        "target": "article",
+        "n": 1848509
+      },
+      {
+        "source": "source_is_redirect",
+        "target": "other_namespace",
+        "n": 7323
+      },
+      {
+        "source": "source_other_namespace",
+        "target": "redirect_target_other_namespace",
+        "n": 2182
+      },
+      {
+        "source": "source_article",
+        "target": "redirect_target_other_namespace",
+        "n": 599
+      },
+      {
+        "source": "source_is_redirect",
+        "target": "red_link",
+        "n": 272
+      },
+      {
+        "source": "source_is_redirect",
+        "target": "redirect_resolved",
+        "n": 112
+      },
+      {
+        "source": "source_other_namespace",
+        "target": "redirect_interwiki",
+        "n": 5
+      },
+      {
+        "source": "source_article",
+        "target": "redirect_interwiki",
+        "n": 2
+      },
+      {
+        "source": "source_is_redirect",
+        "target": "redirect_target_other_namespace",
+        "n": 1
+      }
+    ],
+    "pl_from_namespace_inconsistent_with_page": 963
+  },
+  "edges": {
+    "candidate_edges": 238762721,
+    "self_loops": 53339,
+    "duplicates_after_redirect_resolution": 2806457,
+    "final_edges": 235902925
+  },
+  "degrees": {
+    "nodes": 2782511,
+    "sinks_out_degree_0": 256,
+    "orphans_in_degree_0": 46349,
+    "isolated_both_0": 133,
+    "disambiguation_nodes": 180041,
+    "mean_out_degree": 84.78059026541135,
+    "median_out_degree": 40.0,
+    "max_out_degree": 5374,
+    "median_in_degree": 14.0,
+    "max_in_degree": 579086
+  }
+}

@@ -1,0 +1,14 @@
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Measure & NumPy CSR + Parquet & DuckDB \\
+\midrule
+Build from cleaned edges (s) & 44 & 29 \\
+Disk size (GB) & 2.03 & 1.53 \\
+Load / connect (s) & 5.5 & 0.02 \\
+Peak resident memory (GB) & 2.7 & 2.4 \\
+Q1 full forward BFS (s) & 3.4 & 9.4 \\
+Q2 full reverse BFS (s) & 3.3 & 12.0 \\
+Q3 degrees of 1000 nodes (ms) & 0.06 & 12.4 \\
+Q4 2000 title/id lookups (ms) & 0.4 & 1515 \\
+\bottomrule
+\end{tabular}

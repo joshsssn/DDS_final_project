@@ -1,0 +1,46 @@
+# Central configuration. Every script reads this file; nothing is hard-coded elsewhere.
+
+dump:
+  wiki: frwiki
+  # Pinned dump date (most recent complete dump on 2026-10-04, all 42 jobs "done").
+  # Never use "latest": it changes over time and breaks reproducibility.
+  date: "20261001"
+  base_url: "https://dumps.wikimedia.org"
+  tables: [page, pagelinks, linktarget, redirect, page_props]
+
+# Wikimedia asks for a descriptive User-Agent with contact information.
+# Add a group contact (URL or e-mail) here before running if you want to be reachable.
+user_agent: "WikiGameLandmarks/1.0 (CentraleSupelec DDS course student project; python-requests)"
+
+paths:
+  raw: data/raw
+  api_cache: data/raw/api
+  interim: data/interim
+  processed: data/processed
+  cache: data/processed/cache       # persistent BFS / pair cache (reused across runs)
+  figures: reports/figures
+  generated: reports/generated      # tables and LaTeX macros written by code
+
+parse:
+  workers: 6                        # processes used to parse string tables (8 logical CPUs)
+
+clean:
+  max_redirect_depth: 5             # follow redirect chains up to this length (measured maximum: 3)
+
+analysis:
+  seed: 42
+  robustness_seed: 69               # independent second sample, compared with the main one
+  n_pairs: 200000                     # N random (s, t) pairs
+  top_k: 100                        # K candidates per criterion
+  n_random_baseline: 50             # random articles evaluated as "baseline hubs"
+  top_overlap: 50                   # size of the top-k overlap comparison
+  min_coverage: 0.9                 # hubs connected for < 90% of the pairs are not ranked by mean detour
+  bfs_workers: 6                    # parallel BFS processes (graph is memory-mapped, shared)
+
+bias_check:
+  enabled: true
+  n_top_candidates: 100             # top candidates by out-degree included in the sample
+  n_top_in_degree: 50               # top articles by in-degree ("general" pages, e.g. countries)
+  n_random: 50                      # random articles included in the sample
+  seed: 7
+  sleep_seconds: 3.0                # polite rate: one request every 3 s (1 req/s triggered HTTP 429)

@@ -1,0 +1,32 @@
+{
+  "frwiki-20261001-page.sql.gz": {
+    "url": "https://dumps.wikimedia.org/frwiki/20261001/frwiki-20261001-page.sql.gz",
+    "size_bytes": 485960880,
+    "sha1": "bd0394693e31b62a189d91d311d3a1e83367e5df",
+    "acquired_utc": "2026-10-04T13:03:56+00:00"
+  },
+  "frwiki-20261001-pagelinks.sql.gz": {
+    "url": "https://dumps.wikimedia.org/frwiki/20261001/frwiki-20261001-pagelinks.sql.gz",
+    "size_bytes": 1784677137,
+    "sha1": "f5409c486caf367a7d08e7f687303cbdbdf8800b",
+    "acquired_utc": "2026-10-04T13:10:03+00:00"
+  },
+  "frwiki-20261001-linktarget.sql.gz": {
+    "url": "https://dumps.wikimedia.org/frwiki/20261001/frwiki-20261001-linktarget.sql.gz",
+    "size_bytes": 352516801,
+    "sha1": "4a2132ca03853930b362db0092a333d9aa3ad846",
+    "acquired_utc": "2026-10-04T13:11:12+00:00"
+  },
+  "frwiki-20261001-redirect.sql.gz": {
+    "url": "https://dumps.wikimedia.org/frwiki/20261001/frwiki-20261001-redirect.sql.gz",
+    "size_bytes": 28188870,
+    "sha1": "fed2fe03b81e8a4ab98161b959d7d7fc496fe57b",
+    "acquired_utc": "2026-10-04T13:11:18+00:00"
+  },
+  "frwiki-20261001-page_props.sql.gz": {
+    "url": "https://dumps.wikimedia.org/frwiki/20261001/frwiki-20261001-page_props.sql.gz",
+    "size_bytes": 104234165,
+    "sha1": "7ddc40dc0e130399faf4521aa0d4739d255b9ab5",
+    "acquired_utc": "2026-10-04T13:11:39+00:00"
+  }
+}

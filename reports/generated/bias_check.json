@@ -1,0 +1,43 @@
+{
+  "n_pages": 200,
+  "n_errors": 0,
+  "removed_selectors": [
+    ".navbox-container",
+    ".navbox",
+    ".navigation-only",
+    "#bandeau-portail",
+    ".bandeau-portail"
+  ],
+  "random": {
+    "n": 50,
+    "median_dump_out_degree": 55.5,
+    "median_html_all": 55.5,
+    "median_body": 30.0,
+    "median_template_share": 0.2611451048951049,
+    "mean_template_share": 0.3555628070961932,
+    "median_ratio_html_all_to_dump": 1.0
+  },
+  "top_in_degree": {
+    "n": 50,
+    "median_dump_out_degree": 352.0,
+    "median_html_all": 352.0,
+    "median_body": 223.5,
+    "median_template_share": 0.23909331149920082,
+    "mean_template_share": 0.2954623794271665,
+    "median_ratio_html_all_to_dump": 1.0
+  },
+  "top_out_degree": {
+    "n": 100,
+    "median_dump_out_degree": 2524.0,
+    "median_html_all": 2524.0,
+    "median_body": 2520.5,
+    "median_template_share": 0.0050355649501149236,
+    "mean_template_share": 0.08873594576950512,
+    "median_ratio_html_all_to_dump": 1.0
+  },
+  "top_group_spearman_dump_vs_body": {
+    "rho": 0.9022406132994352,
+    "p_value": 1.4147578653547276e-37,
+    "n": 100
+  }
+}
