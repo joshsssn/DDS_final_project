@@ -8,8 +8,8 @@ dump:
   base_url: "https://dumps.wikimedia.org"
   tables: [page, pagelinks, linktarget, redirect, page_props]
 
-# Wikimedia asks for a descriptive User-Agent with contact information.
-# Add a group contact (URL or e-mail) here before running if you want to be reachable.
+# Descriptive User-Agent sent with every request (Wikimedia asks for one with a contact).
+# A group contact (URL or shared address) can be added here; never a personal e-mail.
 user_agent: "WikiGameLandmarks/1.0 (CentraleSupelec DDS course student project; python-requests)"
 
 paths:

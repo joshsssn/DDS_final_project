@@ -387,19 +387,19 @@ $d(h,\cdot)$ and $d(\cdot,h)$ for all articles give its detour on every pair.
 {\setlength{\fboxsep}{8pt}\colorbox{panel}{\parbox{\dimexpr\linewidth-16pt}{
 \kicker{Intuition is right about\dots}
 \textbf{the kind of page.}\\[3pt]
-{\small Countries, capitals, continents and world wars are the best hubs we found. \BestHub{} is far ahead.}}}}
+{\small Countries, capitals, continents and world wars are the best hubs we found. \BestHub{} leads on both metrics.}}}}
 \column{0.47\textwidth}
 {\setlength{\fboxsep}{8pt}\colorbox{panel}{\parbox{\dimexpr\linewidth-16pt}{
 {\footnotesize\bfseries\color{warm}INTUITION IS WRONG ABOUT\dots}\\[2pt]
 \textbf{``pages with many links''.}\\[3pt]
-{\small Out-degree mostly measures \emph{list-ness}. A long list leads everywhere in its niche, and nowhere else.}}}}
+{\small Out-degree mostly measures how much a page \emph{enumerates}. A long list reaches everything in its subject, and little outside it.}}}}
 \end{columns}
 \vspace{0.45cm}
 \kicker{Our interpretation}
 \begin{itemize}
-  \item A good hub is a page that is linked \textbf{from} everywhere, and that links to broad sub-topics.
-  \item Countries have both properties. Lists have only the second, and only locally.
-  \item In-degree is a better proxy than out-degree, but not a perfect one: template-driven reference pages have a huge in-degree and are mediocre hubs.
+  \item A good hub is a page that many articles link \textbf{to}, and that links to broad sub-topics.
+  \item Countries have both properties. Lists have only the second, and only inside their subject.
+  \item In-degree is a better proxy than out-degree, but not a sufficient one: template-driven reference pages have a huge in-degree and are mediocre hubs.
 \end{itemize}
 \end{frame}
 
@@ -419,9 +419,9 @@ $d(h,\cdot)$ and $d(\cdot,h)$ for all articles give its detour on every pair.
 \column{0.48\textwidth}
 \kicker{Lessons learned}
 \begin{itemize}\small
-  \item \textbf{Never assume a schema.} The dump layout changed; a strict parser caught it.
+  \item \textbf{Never assume a schema.} The dump layout changed; the parser reads each file's own \texttt{CREATE TABLE}.
   \item \textbf{Measure before cleaning.} Redirect chains were trivial; red links mattered far more.
-  \item \textbf{Review the code before the final run.} A systematic review found 11 real defects.
+  \item \textbf{Check the code against its definitions.} Two definitions were wrong at first: the pair populations of the hub metrics, and the unit of the bias check.
   \item \textbf{Pick the algorithm before the hardware.} Bidirectional BFS: \PairSpeedup$\times$.
   \item \textbf{Simple tools fit the scale.} \CsrDiskGB\,GB of arrays, no server.
 \end{itemize}

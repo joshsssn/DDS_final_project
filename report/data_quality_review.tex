@@ -1,0 +1,102 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1.5cm]{geometry}
+\usepackage{booktabs,tabularx,array,enumitem,xcolor}
+\usepackage[hidelinks]{hyperref}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{3pt}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+\begin{document}
+
+{\large\bfseries Landmarks of the Wikipedia Game --- Raw data quality and cleaning}\\[2pt]
+{\small Raphaël Hazan, Nicolas Salapete, Edouard Souied, Josh Soussan \quad
+Data, Data Storage, Data Collection (CentraleSupélec)}
+
+\medskip
+\textbf{Repository (for peer review).}
+\url{https://github.com/joshsssn/DDS_final_project}\\
+{\small\ttfamily git clone https://github.com/joshsssn/DDS\_final\_project \&\& cd DDS\_final\_project\\
+uv sync \&\& uv run python run.py all}\\
+{\small The data are not in the repository: \texttt{run.py all} downloads the pinned dump and rebuilds
+everything. All numbers below are written by the code to \texttt{data/interim/parse\_stats.json} and
+\texttt{data/processed/quality.json}; the full assessment is in \texttt{docs/data\_quality.md}.}
+
+\medskip
+\textbf{Raw data.} French Wikipedia dump of \textbf{1 October 2026} (\texttt{frwiki-20261001}): tables
+\texttt{page}, \texttt{pagelinks}, \texttt{linktarget}, \texttt{redirect}, \texttt{page\_props}
+(2.76\,GB compressed), each file SHA-1 checked against the official checksum file.
+Our streaming parser keeps \emph{every} row: its counts (14,148,116 pages; 470,370,087 links;
+31,672,724 link targets; 2,071,832 redirects; 8,480,889 page properties) equal an independent
+\texttt{zcat | grep -c} count.
+The game needs a graph whose nodes are \emph{articles} (namespace 0, not a redirect) and whose edges
+are clicks a player can make. We measured first, then removed only what is not such a node or edge.
+
+\medskip
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.6cm}LLL@{}}
+\toprule
+\textbf{Problem} & \textbf{Measured in the raw dump} & \textbf{Effect on the game} & \textbf{Cleaning decision} \\
+\midrule
+Pages that are not articles &
+14,148,116 pages in 28 namespaces; only 2,782,511 (19.7\%) are articles. Namespace 0 holds 1,844,607 redirects. &
+Talk, user, category or template pages cannot be visited in the game. &
+Nodes = namespace-0 non-redirect pages only. \\
+\addlinespace
+Links whose source is not an article &
+185,569,438 links (39.45\%) start in another namespace; 1,856,217 (0.39\%) start on a redirect page. &
+They are not moves from an article. &
+Dropped. \\
+\addlinespace
+Links to redirects &
+10,729,947 links from articles (3.79\%) point to a redirect. Chains: 1,844,357 of 1 hop, 91 of 2, 6 of 3; no cycle. 153 redirects lead nowhere usable (149 to another namespace, 3 interwiki, 1 broken). &
+Dropping them would delete real paths; keeping redirects as nodes would add a fake click. &
+Target replaced by the final article, chains followed up to 5 hops (maximum observed: 3, so none is cut). The 153 unusable redirects are dropped. \\
+\addlinespace
+Red links &
+27,000,122 links from articles (9.54\%) point to a page that does not exist (8,972,646 of the 31,672,724 link targets). &
+Impossible moves. &
+Dropped. \\
+\addlinespace
+Links to other namespaces &
+17,180,988 links from articles (6.07\%) point to a category, template, file\ldots; 601 point to a redirect leaving namespace 0. &
+Excluded by our definition of a move. &
+Dropped. \\
+\addlinespace
+Self-loops and duplicates (after redirect resolution) &
+Of the 238,762,721 candidate edges: 53,339 self-loops (0.022\%), 2,806,457 duplicates (1.18\%), e.g.\ a page linking both to X and to a redirect of X. &
+A self-click is never on a shortest path; duplicates would inflate out-degree, our ``perceived landmark'' measure. &
+Both removed: a simple directed graph, out-degree = number of \emph{distinct} linked articles. \\
+\addlinespace
+Disambiguation pages &
+180,041 articles (6.47\%) carry the \texttt{disambiguation} property. &
+A player can click through them, but they are not meaningful start or target pages. &
+Kept as nodes; never drawn as start or target of a random pair. \\
+\addlinespace
+Sinks and orphans &
+256 articles with no outgoing link, 46,349 (1.67\%) with no incoming link, 133 with neither. &
+Some pairs have no path. &
+Kept; pairs without a path are counted and reported, never dropped. \\
+\addlinespace
+Inconsistent source namespace &
+963 links whose \texttt{pl\_from\_namespace} disagrees with the \texttt{page} table. &
+Unclear whether the source is an article. &
+The \texttt{page} table is trusted. \\
+\bottomrule
+\end{tabularx}
+
+\normalsize
+\medskip
+\textbf{Result.} 470,370,087 raw link rows $\rightarrow$ 238,762,721 candidate edges $\rightarrow$
+\textbf{235,902,925 edges} between \textbf{2,782,511 articles} (mean out-degree 84.8, median 40).
+
+\textbf{What we deliberately did not change.} No sampling, imputation or artificial noise; titles kept
+exactly as in the dump. Links added by templates (navigation boxes, authority control) are \emph{kept}:
+\texttt{pagelinks} records them, they appear on the page and a player can click them. They distort
+out-degree, so instead of removing them we measure the distortion separately (bias check on 200
+pages through the MediaWiki API).
+
+\end{document}

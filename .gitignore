@@ -8,7 +8,6 @@ __pycache__/
 .vscode/
 .DS_Store
 Thumbs.db
-docs/
 
 # Data: several GB, re-obtained with `uv run python run.py all`.
 # Only the small evidence files (sizes, checksums, counts, logs) are versioned.

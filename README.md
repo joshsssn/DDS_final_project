@@ -28,8 +28,8 @@ Individual steps:
 | Step | Command | Output | Time on our laptop |
 |------|---------|--------|--------------------|
 | download | `uv run python run.py download` | `data/raw/*.sql.gz` (2.76 GB), SHA-1 verified, `manifest.json` | ~10 min (network) |
-| parse | `uv run python run.py parse` | `data/interim/*.parquet`, `parse_stats.json` | see `parse_stats.json` |
-| clean | `uv run python run.py clean` | `data/processed/graph/` (CSR arrays + nodes), `quality.json` | see `quality.json` |
+| parse | `uv run python run.py parse` | `data/interim/*.parquet`, `parse_stats.json` | 379 s (277 s for the 470 M `pagelinks` rows) |
+| clean | `uv run python run.py clean` | `data/processed/graph/` (CSR arrays + nodes), `quality.json` | ~6 min, mostly sorting 236 M edges |
 | store | `uv run python run.py store` | `reports/generated/storage_benchmark.json` | a few minutes |
 | analyze | `uv run python run.py analyze` | `reports/generated/sample_seed42_n200000/` | ~6 min for the 200,000 pairs + ~12 min for the hubs (first run; cached afterwards) |
 | robustness | `uv run python run.py robustness` | `reports/generated/sample_seed69_n200000/` (independent second sample, `analysis.robustness_seed`) | ~6 min + new hubs (first run) |
@@ -100,7 +100,9 @@ tests/                 parser and BFS unit tests (toy inputs)
 bonus/                 interactive shortest-path explorer (local web page, standard library only)
 labels/hub_type_labels.csv   type label of each candidate hub (assigned by hand from the page titles)
 notebooks/             final reproducible notebook
-report/                LaTeX report (report.tex/pdf), Beamer slides (slides.tex/pdf)
+docs/                  provenance, decision log, data quality assessment, storage comparison
+report/                LaTeX report (report.tex/pdf), Beamer slides (slides.tex/pdf),
+                       one-page data quality review (data_quality_review.tex/pdf)
 reports/figures/       generated figures;  reports/generated/  generated tables & numbers
 data/                  (not versioned) raw / interim / processed data
 ```

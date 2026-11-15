@@ -57,7 +57,7 @@ most recent complete dump, checked in \texttt{dumpstatus.json}.
   2026 dumps changed layout, with one row per line. Any unexpected syntax raises an error instead
   of shifting columns.
 \item \textbf{Validation.} The parser keeps all \NLinkRows{} \texttt{pagelinks} rows (parsed in
-  \ParseSecondsPagelinks\,s). An independent \texttt{zcat|grep} count gives exactly the same totals
+  \ParseSecondsPagelinks\,s). An independent \texttt{zcat | grep -c} count gives exactly the same totals
   for all five tables, and the parser has unit tests on tricky rows.
 \item \textbf{Secondary collection.} For a bias check, we fetched the rendered HTML of
   \BiasNPages{} pages through the MediaWiki API. We asked for the exact revision of the dump
@@ -152,7 +152,7 @@ BFS on a read-only graph.
   \end{itemize}
 \item \textbf{Best hubs} (Fig.~\ref{fig:main}b, Table~\ref{tab:best}). \BestHub{} has a mean detour
   of \BestHubDetour{} click and lies on a shortest path for \BestHubOnPath{} of the pairs.
-  By type, the top~15 are: \TopFifteenTypes{} (the period is the Second World War).
+  By type, the top~15 are: \TopFifteenTypes{}.
 \item \textbf{Perceived criterion} (Fig.~\ref{fig:main}a).
   \begin{itemize}
   \item The pages with the highest out-degree are long lists (cantons, post offices, deaths per
@@ -217,22 +217,21 @@ the page, averaged over the \NReachable{} reachable random pairs.}
 \begin{itemize}
 \item \textbf{The answer depends on what "landmark" means.}
   \begin{itemize}
-  \item If landmarks are the \emph{kinds} of pages players aim for (countries, capitals,
-    continents, world wars), intuition is largely right: these are the best hubs we found, with
-    \BestHub{} far ahead.
-  \item If landmarks are "pages with many links", intuition is wrong. Out-degree mostly measures
-    \emph{list-ness}, and a long list of cantons leads everywhere \emph{in its niche} but is far
-    from the rest of the encyclopedia.
+  \item If a landmark is a \emph{kind} of page (countries, capitals, continents, world wars),
+    intuition holds: these are the best hubs of the sample, and \BestHub{} leads the ranking on
+    both metrics.
+  \item If a landmark is simply a page with many links, intuition fails. Out-degree mostly
+    measures how much a page enumerates. A list of cantons reaches every canton, and little else.
   \end{itemize}
-\item \textbf{What makes a good hub is being linked \emph{from} everywhere.} A page that many
-  articles link to is close to almost every start. A broad page also links to sub-topics that are
-  close to many targets. Countries combine both properties, while lists have only the second, and
-  only locally.
-\item \textbf{Template links are a double-edged signal.} They are a large share of ordinary pages'
-  links. \emph{Reference} pages are probably reached mostly through templates and infoboxes (not
-  measured), which makes them look central by in-degree. Those
-  pages are nonetheless mediocre hubs: in-degree is a better proxy than out-degree, but not a
-  perfect one.
+\item \textbf{A good hub is a page that many articles link \emph{to}.} Being linked from
+  everywhere places the page near almost every start; linking to broad sub-topics then places it
+  near many targets. Countries have both properties. Lists have the second one, but only inside
+  their own subject.
+\item \textbf{Template links bias in-degree as well as out-degree.} They make up
+  \BiasRandomMedShare{} of the links of an ordinary article (Fig.~\ref{fig:main}d). \emph{Reference}
+  pages are probably reached mostly through templates and infoboxes, which gives them a very high
+  in-degree, yet they remain mediocre hubs: in-degree is a better proxy than out-degree, not a
+  sufficient one.
 \item These interpretations concern the structural \emph{optimum}. They do not describe how humans
   actually play: we used no game logs.
 \end{itemize}
@@ -263,13 +262,14 @@ the page, averaged over the \NReachable{} reachable random pairs.}
 
 \section{Lessons learned}
 \begin{itemize}
-\item Never assume a schema. The 2026 dumps silently changed their layout, which a strict parser
-  caught immediately.
+\item Never assume a schema. The 2026 dumps changed their layout; the parser read each file's own
+  \texttt{CREATE TABLE} and refused to shift columns silently.
 \item Measure before cleaning. Redirect chains turned out to be trivial (maximum length 3), while
   red links and other namespaces mattered far more.
-\item A systematic code review before the final run found 11 real defects: cache invalidation,
-  mixed denominators, a unit mismatch in the bias check, and others. All were fixed before the
-  final numbers.
+\item Check the code against its own definitions before the final run. Two examples that changed
+  results: the pair populations of the hub metrics (detour over connected pairs, on-path rate over
+  all reachable pairs), and the bias check, which first counted a link and a link to its redirect
+  twice.
 \item Simple tools fitted the scale: \NArticles{} nodes in \CsrDiskGB\,GB of NumPy arrays. A graph database
   would have added a server without speeding up our queries.
 \end{itemize}
