@@ -4,9 +4,9 @@
   "top_k": 100,
   "timings_s": {
     "largest SCC": 0.01,
-    "pairs": 0.03,
+    "pairs": 0.57,
     "hub BFS": 0.02,
-    "hub metrics": 7.36
+    "hub metrics": 8.21
   },
   "graph": {
     "nodes": 2782511,
@@ -147,6 +147,58 @@
         "median_on_path_rate": 0.0
       }
     },
+    "spearman_by_group": {
+      "top_out_degree": {
+        "out_degree_vs_mean_detour": {
+          "rho": 0.2693811424576972,
+          "p_value": 0.006723514952108735,
+          "n": 100
+        },
+        "in_degree_vs_mean_detour": {
+          "rho": -0.8308678912123788,
+          "p_value": 1.0890066572919009e-26,
+          "n": 100
+        }
+      },
+      "top_in_degree": {
+        "out_degree_vs_mean_detour": {
+          "rho": -0.8217596901126965,
+          "p_value": 1.1265846202584377e-25,
+          "n": 100
+        },
+        "in_degree_vs_mean_detour": {
+          "rho": -0.35308448622329985,
+          "p_value": 0.0003142806133427814,
+          "n": 100
+        }
+      },
+      "top_path_frequency": {
+        "out_degree_vs_mean_detour": {
+          "rho": -0.49798673827597584,
+          "p_value": 1.350904406627794e-07,
+          "n": 100
+        },
+        "in_degree_vs_mean_detour": {
+          "rho": -0.529368877480471,
+          "p_value": 1.490679622065922e-08,
+          "n": 100
+        }
+      },
+      "random_baseline": {
+        "out_degree_vs_mean_detour": {
+          "rho": -0.5690065212990862,
+          "p_value": 1.6204048242441928e-05,
+          "n": 50
+        },
+        "in_degree_vs_mean_detour": {
+          "rho": -0.601018694044589,
+          "p_value": 3.929245516551534e-06,
+          "n": 50
+        }
+      }
+    },
+    "unlabelled_candidates": 0,
+    "label_rows_not_in_this_sample": 30,
     "by_type_label": {
       "city": {
         "n": 16,
@@ -155,10 +207,10 @@
         "median_on_path_rate": 0.0262891809908999
       },
       "concept": {
-        "n": 8,
-        "n_rankable": 8,
-        "median_mean_detour": 2.2773003033367036,
-        "median_on_path_rate": 0.011880687563195148
+        "n": 12,
+        "n_rankable": 12,
+        "median_mean_detour": 2.4148129423660265,
+        "median_on_path_rate": 0.010111223458038422
       },
       "continent": {
         "n": 2,
@@ -203,10 +255,10 @@
         "median_on_path_rate": 0.0010111223458038423
       },
       "period": {
-        "n": 42,
-        "n_rankable": 42,
-        "median_mean_detour": 1.7173913043478262,
-        "median_on_path_rate": 0.01693629929221436
+        "n": 41,
+        "n_rankable": 41,
+        "median_mean_detour": 1.7163801820020221,
+        "median_on_path_rate": 0.017189079878665317
       },
       "person": {
         "n": 1,
@@ -215,9 +267,9 @@
         "median_on_path_rate": 0.004044489383215369
       },
       "reference": {
-        "n": 61,
-        "n_rankable": 61,
-        "median_mean_detour": 2.5561172901921134,
+        "n": 58,
+        "n_rankable": 58,
+        "median_mean_detour": 2.49469160768453,
         "median_on_path_rate": 0.007583417593528817
       },
       "territory": {
@@ -227,6 +279,25 @@
         "median_on_path_rate": 0.03134479271991911
       }
     },
-    "unlabelled_candidates": 0
+    "min_type_size": 5,
+    "small_types": [
+      "continent",
+      "organisation",
+      "other",
+      "person",
+      "territory"
+    ],
+    "small_types_n": 9,
+    "n_reference_candidates": 58,
+    "spearman_in_degree_vs_mean_detour_candidates_without_reference": {
+      "rho": -0.8709023475550358,
+      "p_value": 4.520850031287663e-62,
+      "n": 197
+    },
+    "spearman_out_degree_vs_mean_detour_candidates_without_reference": {
+      "rho": 0.595921448991957,
+      "p_value": 2.519409101657852e-20,
+      "n": 197
+    }
   }
 }

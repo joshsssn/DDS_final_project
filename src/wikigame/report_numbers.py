@@ -128,6 +128,27 @@ def main() -> None:
         M[name] = fmt(PV[key]["rho"])
         M[name + "P"] = f"{PV[key]['p_value']:.2g}"
         M[name + "N"] = fmt_int(PV[key]["n"])
+    # Spearman rho inside each candidate list (e.g. \RhoOutDetourInGrpPath)
+    for grp, gname in [("top_out_degree", "GrpOut"), ("top_in_degree", "GrpIn"),
+                       ("top_path_frequency", "GrpPath"), ("random_baseline", "GrpRandom")]:
+        for var, vname in [("out_degree_vs_mean_detour", "RhoOutDetourIn"),
+                           ("in_degree_vs_mean_detour", "RhoInDetourIn")]:
+            s = PV["spearman_by_group"][grp][var]
+            M[vname + gname] = fmt(s["rho"])
+            M[vname + gname + "N"] = fmt_int(s["n"])
+    if "spearman_in_degree_vs_mean_detour_candidates_without_reference" in PV:
+        for key, name in [("spearman_in_degree_vs_mean_detour_candidates_without_reference", "RhoInDetourNoRef"),
+                          ("spearman_out_degree_vs_mean_detour_candidates_without_reference", "RhoOutDetourNoRef")]:
+            M[name] = fmt(PV[key]["rho"])
+            M[name + "N"] = fmt_int(PV[key]["n"])
+        M["NReferenceCandidates"] = fmt_int(PV["n_reference_candidates"])
+        M["MinTypeSize"] = fmt_int(PV["min_type_size"])
+        M["NSmallTypes"] = fmt_int(len(PV["small_types"]))
+        M["NSmallTypePages"] = fmt_int(PV["small_types_n"])
+        M["SmallTypesList"] = ", ".join(PV["small_types"])
+    lab_p = ROOT / "labels" / "hub_type_labels.csv"
+    if lab_p.exists():
+        M["NTypeLabels"] = fmt_int(pd.read_csv(lab_p).type.nunique())
     k = A["top_overlap"]
     M["TopOverlapK"] = str(k)
     M["TopOverlapOutDetour"] = fmt_int(PV[f"top{k}_overlap_out_degree_vs_mean_detour"])
@@ -175,6 +196,18 @@ def main() -> None:
             key = "".join(w.capitalize() for w in str(t).replace("/", " ").replace("-", " ").split())
             M[f"Type{key}N"] = fmt_int(v["n"])
             M[f"Type{key}MedDetour"] = fmt(v["median_mean_detour"])
+
+    # ---- in-degree that exists only through redirect resolution ----------------------
+    rs_p = gen / "redirect_share.json"
+    if rs_p.exists():
+        RS = read_json(rs_p)
+        t20 = RS["share_redirect_only"]["top20_best_hubs"]
+        M["RedirTopMedShare"] = pct(t20["median"], 2)
+        M["RedirTopMaxShare"] = pct(t20["max"])
+        M["RedirTopMaxTitle"] = tex_escape(t20["max_title"].replace("_", " "))
+        M["RedirRhoInDirect"] = fmt(RS["spearman_in_degree_vs_direct_in_degree_candidates"]["rho"], 3)
+        M["RedirTopTwentyInOverlap"] = fmt_int(RS["top20_in_degree_overlap_with_vs_without_redirects"])
+        M["RedirRhoInDetourDirect"] = fmt(RS["spearman_in_degree_vs_mean_detour"]["direct_only"]["rho"])
 
     # ---- bias check ----------------------------------------------------------------
     bc_p = gen / "bias_check.json"

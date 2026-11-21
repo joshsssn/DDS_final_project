@@ -10,14 +10,14 @@ set of links between articles, not a sample.
   The `pagelinks`, `linktarget`, `page`, `redirect` and `page_props` tables give every internal
   link, the namespace and redirect status of every page, and the disambiguation flag.
 - They are official (published by the Wikimedia Foundation), dated, checksummed, freely licensed
-  (CC BY-SA / GFDL) and contain no personal data. This makes the whole pipeline reproducible:
-  anyone can download the same files and verify the same SHA-1 hashes.
+  (CC BY-SA / GFDL) and contain no personal data. The pipeline is therefore reproducible: anyone
+  can download the same files and verify the same SHA-1 hashes.
 - The alternative, crawling pages through the API, would take weeks for ~2.8 M articles. It would
   also mix revisions from different dates and put unnecessary load on Wikimedia servers.
 
 **Why the full graph rather than a sample.** Shortest-path distances are a global property.
 Removing nodes or edges from the graph changes distances and can disconnect pairs, so any subgraph
-would bias exactly what we measure. The full graph fits in memory on our machine: a CSR array
+would bias the quantity we measure. The full graph fits in memory on our machine: a CSR array
 structure of a few GB. We therefore sample *pairs of articles* (random start/target), not the graph.
 
 **Why French Wikipedia.** It is the edition we play in, so the "intuitive landmarks"

@@ -44,8 +44,7 @@ result is checked against the NumPy BFS: `bfs_matches_numpy = true`.
 **Discussed, not benchmarked.**
 - **SQLite.** It is row-oriented, has no vectorised execution, and a B-tree index on 236 M rows
   takes several GB. Each BFS level is a large join, which SQLite does much more slowly than DuckDB.
-  It brings nothing that DuckDB does not do better for this workload.
-- **Neo4j or another graph database.** Native graph traversals are the right model in principle.
+  It brings nothing that DuckDB does not do better for this workload.- **Neo4j or another graph database.** Native graph traversals are the right model in principle.
   But Neo4j needs a server (Java or Docker), an import of 236 M relationships, and a
   disk-and-page-cache layout designed for transactional workloads. It also has no advantage for
   *full* BFS over the whole graph, which is exactly our query. We wanted the simplest, lightest
@@ -99,10 +98,10 @@ Notes:
    `numpy` and `pyarrow`. There is no server and no schema migration, and the files are read
    identically on every OS.
 
-**Where DuckDB is still used.** It remains the right tool for the *relational* part of the pipeline:
-the cleaning joins between `pagelinks` (470 M rows), `linktarget`, `page` and `redirect` run
-out-of-core and multi-threaded directly on the Parquet files (`clean.py`). We use each tool for the
-access pattern it was designed for.
+**Where DuckDB is still used.** DuckDB handles the *relational* part of the pipeline: the
+cleaning joins between `pagelinks` (470 M rows), `linktarget`, `page` and `redirect` run
+out-of-core and multi-threaded directly on the Parquet files (`clean.py`). Each tool is used for
+the access pattern it was built for.
 
 **Limitations of the choice.**
 - CSR is static: any change to the graph means re-running the cleaning. That took 6.6 min as measured

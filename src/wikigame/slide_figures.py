@@ -14,8 +14,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from .common import ROOT, get_logger, load_config, path, read_json
+from .common import ROOT, SMALL_TYPES, get_logger, load_config, path, read_json
 from .figures import (AQUA, BLUE, GREY, GRID, GROUP_STYLE, INK, INK2, ORANGE, hub_groups, nice,
+                      typed_candidates, type_order,
                       save)
 
 log = get_logger("slide_figures")
@@ -165,6 +166,15 @@ def fig_best_hubs(h, figdir, n=12):
 def fig_two_scatters(h, res, figdir):
     h = h.assign(group=hub_groups(h))
     pv = res["perceived_vs_real"]
+    # rho inside each candidate list (pooling lists selected on different variables misleads)
+    bg = {g: v["out_degree_vs_mean_detour"]["rho"] for g, v in pv["spearman_by_group"].items()}
+    noref = pv.get("spearman_in_degree_vs_mean_detour_candidates_without_reference")
+    titles = {
+        "out_degree": f"ρ per list: {bg['top_out_degree']:+.2f} top out,\n{bg['top_in_degree']:+.2f} top in, "
+                      f"{bg['top_path_frequency']:+.2f} path, {bg['random_baseline']:+.2f} random",
+        "in_degree": f"ρ = {pv['spearman_in_degree_vs_mean_detour_candidates']['rho']:+.2f} (all),"
+                     + (f"\n{noref['rho']:+.2f} w/o reference pages" if noref else ""),
+    }
     fig, axes = plt.subplots(1, 2, figsize=(3.85, 2.5), sharey=True, gridspec_kw={"wspace": 0.06})
     for ax, col, key, label in [
             (axes[0], "out_degree", "spearman_out_degree_vs_mean_detour_candidates", "out-degree"),
@@ -175,8 +185,8 @@ def fig_two_scatters(h, res, figdir):
                        edgecolor="white", linewidth=0.4, label=grp, zorder=3)
         ax.set_xscale("log")
         ax.set_xlabel(label + " (log scale)", fontsize=7.5)
-        ax.set_title(f"ρ = {pv[key]['rho']:+.2f}".replace("-", "−"), fontsize=8.5,
-                     loc="left", fontweight="bold")
+        ax.set_title(titles[col].replace("-", "−"), fontsize=6,
+                     loc="left" if col == "out_degree" else "right")
         fr = h.nsmallest(1, "mean_detour").iloc[0]
         ax.annotate(nice(fr.title), (fr[col], fr.mean_detour), fontsize=6.5, color=INK2,
                     xytext=(-5, 0), textcoords="offset points", ha="right", va="center")
@@ -245,14 +255,15 @@ def fig_robustness(gen, cfg, figdir):
     save(fig, "s_robustness", figdir)
 
 
-def fig_types(h, figdir):
-    """Median mean detour per type label, types with at least 3 candidates."""
-    c = h[h.top_out_degree | h.top_in_degree | h.top_path_frequency].dropna(subset=["type"])
+def fig_types(h, figdir, min_n):
+    """Median mean detour per type label; types with < min_n candidates merged, shown last."""
+    c = typed_candidates(h, min_n)
     g = c.groupby("type").mean_detour.agg(["median", "count"])
-    g = g[g["count"] >= 3].sort_values("median", ascending=False)
+    g = g.loc[type_order(c)[::-1]]   # barh draws bottom-up: best type on top, small types at the bottom
     base = h[h.random_baseline & ~(h.top_out_degree | h.top_in_degree | h.top_path_frequency)]
     fig, ax = plt.subplots(figsize=(3.85, 2.5))
-    ax.barh([f"{t}  (n={n})" for t, n in zip(g.index, g["count"])], g["median"], color=BLUE, height=0.62)
+    ax.barh([f"{t}  (n={n}, not ranked)" if t == SMALL_TYPES else f"{t}  (n={n})"
+             for t, n in zip(g.index, g["count"])], g["median"], color=BLUE, height=0.62)
     for i, v in enumerate(g["median"]):
         ax.text(v, i, f"  {v:.2f}", va="center", fontsize=7.5, color=INK)
     b = base.mean_detour.median()
@@ -308,7 +319,7 @@ def main() -> None:
     fig_targets(q, figdir)
     fig_best_hubs(hubs, figdir)
     fig_two_scatters(hubs, res, figdir)
-    fig_types(hubs, figdir)
+    fig_types(hubs, figdir, A["min_type_size"])
     fig_speed(cfg, figdir)
     fig_robustness(gen, cfg, figdir)
     if (gen / "storage_benchmark.json").exists():

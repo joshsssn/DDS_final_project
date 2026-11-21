@@ -17,7 +17,7 @@
 \title{\vspace{-1.2cm}Landmarks of the Wikipedia game:\\ are the pages players aim for the best hubs?}
 \author{Raphaël Hazan, Nicolas Salapete, Edouard Souied, Josh Soussan\\
 \small Data, Data Storage, Data Collection --- CentraleSupélec / Université Paris-Saclay}
-\date{\small Dump of French Wikipedia dated \DumpDate{} --- code and data instructions in the repository (\texttt{README.md})}
+\date{\small Dump of French Wikipedia dated \DumpDate{} --- code, data instructions and this report: \url{https://github.com/joshsssn/DDS_final_project}}
 
 \begin{document}
 \maketitle
@@ -53,12 +53,12 @@ most recent complete dump, checked in \texttt{dumpstatus.json}.
 \item \textbf{Download.} \texttt{download.py} streams the files with resume support and verifies
   each one against the official SHA-1 file.
 \item \textbf{Parsing.} A custom streaming parser (\texttt{parse\_sql.py}) reads each file's
-  \texttt{CREATE TABLE} statement instead of assuming the schema. This mattered: the
-  2026 dumps changed layout, with one row per line. Any unexpected syntax raises an error instead
-  of shifting columns.
+  \texttt{CREATE TABLE} statement instead of assuming the schema. The 2026 dumps changed layout,
+  with one row per line, so the parser accepts both layouts; any unexpected syntax raises an error
+  rather than shifting columns.
 \item \textbf{Validation.} The parser keeps all \NLinkRows{} \texttt{pagelinks} rows (parsed in
-  \ParseSecondsPagelinks\,s). An independent \texttt{zcat | grep -c} count gives exactly the same totals
-  for all five tables, and the parser has unit tests on tricky rows.
+  \ParseSecondsPagelinks\,s). An independent \texttt{zcat | grep -c} count gives the same totals
+  for the five tables, and the parser has unit tests on tricky rows.
 \item \textbf{Secondary collection.} For a bias check, we fetched the rendered HTML of
   \BiasNPages{} pages through the MediaWiki API. We asked for the exact revision of the dump
   (\texttt{oldid}), at a polite rate, with responses cached.
@@ -75,6 +75,10 @@ has \textbf{\NArticles{} nodes and \NEdges{} edges}.
   \MedianInDeg.
 \item Disambiguation pages (\NDisambig) stay traversable but are never drawn as start or target.
 \item Sinks (\NSinks) and orphans (\NOrphans) are kept and reported.
+\item Redirect resolution barely changes the in-degree of the hubs (\texttt{redirect\_share.py}).
+  For the 20 best hubs, a median \RedirTopMedShare{} of the in-degree comes only through redirects
+  (at most \RedirTopMaxShare, \emph{\RedirTopMaxTitle}). The top~20 candidates by in-degree are
+  the same with or without these links ($\rho=\RedirRhoInDirect$ between the two in-degrees).
 \end{itemize}
 
 \begin{table}[h]\centering\small
@@ -120,8 +124,9 @@ BFS on a read-only graph.
 \section{Analysis method}
 \begin{itemize}
 \item \textbf{Pairs.} We draw \NPairs{} pairs $(s,t)$ uniformly among non-disambiguation articles
-  (seed \Seed). Each pair distance is exact, computed by a bidirectional BFS (validated against the plain BFS). A persistent cache lets new
-  samples reuse every computation and never redraw old pairs.
+  (seed \Seed). Each distance is exact, computed by a bidirectional BFS (validated against the
+  plain BFS). A persistent cache lets new samples reuse each computation and never redraw old
+  pairs.
 \item \textbf{Candidates.} The candidate hubs are the union of four sets, \NCandidates{} pages in
   total:
   \begin{itemize}
@@ -133,8 +138,13 @@ BFS on a read-only graph.
     pages would hide the range of hub quality.
   \end{itemize}
 \item \textbf{Hub metrics.} Each candidate gets a forward and a reverse BFS, which give $d(h,\cdot)$
-  and $d(\cdot,h)$ for all nodes and hence its detour on every pair. All candidates are connected
+  and $d(\cdot,h)$ for all nodes and hence its detour on each pair. All candidates are connected
   to at least \MinCoverage{} of the pairs, so all of them are ranked (\NotRankable{} excluded).
+\item \textbf{Type labels.} Each candidate gets one of \NTypeLabels{} types fixed in advance
+  (country, city, period, list, reference\dots; definitions in \texttt{docs/decisions.md}),
+  assigned by hand from its title in \texttt{labels/hub\_type\_labels.csv}. The whole file was
+  then re-read once; the few labels it changed are listed in \texttt{docs/decisions.md}. Labels
+  never enter a ranking: they only group candidates for Fig.~\ref{fig:main}c.
 \end{itemize}
 
 \section{Results}
@@ -156,28 +166,33 @@ BFS on a read-only graph.
 \item \textbf{Perceived criterion} (Fig.~\ref{fig:main}a).
   \begin{itemize}
   \item The pages with the highest out-degree are long lists (cantons, post offices, deaths per
-    year, films). They are poor hubs: the top-out-degree page
-    (\emph{\TopOutHub}) has a mean detour of \TopOutHubDetour{} and ranks \TopOutHubRank{} out of
+    year, films). They make poor hubs: the top-out-degree page
+    (\emph{\TopOutHub}) has a mean detour of \TopOutHubDetour{} and ranks \TopOutHubRank{} of
     \NCandidates.
-  \item Among the \RhoOutDetourN{} non-random candidates, out-degree is \emph{positively}
-    correlated with mean detour: Spearman $\rho=\RhoOutDetour$, $p=\RhoOutDetourP$. More links
-    went with \emph{worse} hubs.
   \item Only \TopOverlapOutDetour{} of the top-\TopOverlapK{} pages by out-degree are also in the
     top-\TopOverlapK{} by mean detour.
-  \item Among random articles, the sign reverses ($\rho=\RhoOutDetourRandom$, $n=\RhoOutDetourRandomN$):
-    there, a higher out-degree goes with a lower mean detour.
+  \item The four candidate lists are selected on different variables, so we compute Spearman's
+    $\rho$ between out-degree and mean detour \emph{inside} each list. It is positive only among
+    the top out-degree pages ($\rho=\RhoOutDetourInGrpOut$, $n=\RhoOutDetourInGrpOutN$): there,
+    more links go with \emph{worse} hubs. It is negative in the three other lists: top in-degree
+    \RhoOutDetourInGrpIn, top path frequency \RhoOutDetourInGrpPath, random articles
+    \RhoOutDetourInGrpRandom{} ($n=\RhoOutDetourInGrpRandomN$). Pooling the
+    \RhoOutDetourN{} non-random candidates gives $\rho=\RhoOutDetour$; the sign comes from the
+    way the lists were built, so we report the per-list values instead.
   \end{itemize}
 \item \textbf{In-degree tracks hub quality much better} ($\rho=\RhoInDetour$ with mean detour,
-  $\rho=\RhoInOnPath$ with the on-path rate).
-  \begin{itemize}
+  $\rho=\RhoInOnPath$ with the on-path rate, \RhoInDetourN{} non-random candidates). Without the
+  \NReferenceCandidates{} \emph{reference} pages, $\rho$ with mean detour reaches
+  \RhoInDetourNoRef{} ($n=\RhoInDetourNoRefN$).  \begin{itemize}
   \item Median mean detour by group: top out-degree \GrpOutMedDetour, top in-degree
     \GrpInMedDetour, top path frequency \GrpPathMedDetour, random baseline \GrpRandomMedDetour.
   \item The top-\TopK{} lists by in-degree and by path frequency share \OverlapInPath{} pages.
     Out-degree and path frequency share only \OverlapOutPath.
   \end{itemize}
-\item \textbf{By type} (Fig.~\ref{fig:main}c, the \RhoOutDetourN{} non-random candidates). The median mean detour is \TypeContinentMedDetour{}
-  for continents ($n=\TypeContinentN$) and \TypeCountryMedDetour{} for countries
-  ($n=\TypeCountryN$). Periods score \TypePeriodMedDetour, cities \TypeCityMedDetour,
+\item \textbf{By type} (Fig.~\ref{fig:main}c, the \RhoOutDetourN{} non-random candidates). Types
+  with fewer than \MinTypeSize{} pages (\SmallTypesList; \NSmallTypePages{} pages) are merged and
+  not ranked. Countries come first, with a median mean detour of \TypeCountryMedDetour{}
+  ($n=\TypeCountryN$). Cities score \TypeCityMedDetour, periods \TypePeriodMedDetour,
   \emph{reference} pages \TypeReferenceMedDetour{} and lists \TypeListMedDetour.
   \begin{itemize}
   \item \emph{Reference} pages (ISBN, taxonomic ranks, units, authority control) include the
@@ -220,18 +235,20 @@ the page, averaged over the \NReachable{} reachable random pairs.}
   \item If a landmark is a \emph{kind} of page (countries, capitals, continents, world wars),
     intuition holds: these are the best hubs of the sample, and \BestHub{} leads the ranking on
     both metrics.
-  \item If a landmark is simply a page with many links, intuition fails. Out-degree mostly
-    measures how much a page enumerates. A list of cantons reaches every canton, and little else.
+  \item If a landmark is any page with many links, intuition fails at the top of the ranking.
+    Among ordinary pages, more links do help, but the pages with the most links are lists: there,
+    out-degree measures how much a page enumerates. A list of cantons reaches every canton, and
+    little else.
   \end{itemize}
 \item \textbf{A good hub is a page that many articles link \emph{to}.} Being linked from
   everywhere places the page near almost every start; linking to broad sub-topics then places it
   near many targets. Countries have both properties. Lists have the second one, but only inside
   their own subject.
 \item \textbf{Template links bias in-degree as well as out-degree.} They make up
-  \BiasRandomMedShare{} of the links of an ordinary article (Fig.~\ref{fig:main}d). \emph{Reference}
-  pages are probably reached mostly through templates and infoboxes, which gives them a very high
-  in-degree, yet they remain mediocre hubs: in-degree is a better proxy than out-degree, not a
-  sufficient one.
+  \BiasRandomMedShare{} of the links of an ordinary article (Fig.~\ref{fig:main}d).
+  \emph{Reference} pages are probably reached mostly through templates and infoboxes, which gives
+  them a very high in-degree, yet they remain mediocre hubs. Set aside, in-degree is a strong
+  proxy for hub quality ($\rho=\RhoInDetourNoRef$).
 \item These interpretations concern the structural \emph{optimum}. They do not describe how humans
   actually play: we used no game logs.
 \end{itemize}
@@ -247,9 +264,9 @@ the page, averaged over the \NReachable{} reachable random pairs.}
   candidates.
 \item \textbf{Candidate set.} Hubs are evaluated only among \NCandidates{} candidates, so a better
   hub outside this set cannot be excluded.
-\item \textbf{Labels.} The type labels are a judgement on page titles (assigned by hand, re-read
-  once), and some categories are small.
-\item \textbf{Model of the game.}
+\item \textbf{Labels.} The type labels are a judgement on page titles, made by people who had
+  seen the degree ranking, and not checked against players: we ran no survey. Small types are
+  merged so that no median rests on fewer than \MinTypeSize{} pages.\item \textbf{Model of the game.}
   \begin{itemize}
   \item The graph is unweighted and directed. It ignores where a link sits on the page, which
     matters for humans.
@@ -266,10 +283,9 @@ the page, averaged over the \NReachable{} reachable random pairs.}
   \texttt{CREATE TABLE} and refused to shift columns silently.
 \item Measure before cleaning. Redirect chains turned out to be trivial (maximum length 3), while
   red links and other namespaces mattered far more.
-\item Check the code against its own definitions before the final run. Two examples that changed
-  results: the pair populations of the hub metrics (detour over connected pairs, on-path rate over
-  all reachable pairs), and the bias check, which first counted a link and a link to its redirect
-  twice.
+\item Check the code against its own definitions. Two definitions were wrong at first: the pair
+  populations of the hub metrics (detour over connected pairs, on-path rate over all reachable
+  pairs), and the bias check, which counted a link and a link to its redirect twice.
 \item Simple tools fitted the scale: \NArticles{} nodes in \CsrDiskGB\,GB of NumPy arrays. A graph database
   would have added a server without speeding up our queries.
 \end{itemize}

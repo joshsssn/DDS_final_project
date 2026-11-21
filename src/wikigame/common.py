@@ -69,3 +69,17 @@ def _default(o):
     if hasattr(o, "item"):
         return o.item()
     raise TypeError(type(o))
+
+
+SMALL_TYPES = "small types"
+
+
+def group_small_types(types, min_n: int):
+    """Type label used for by-type statistics and figures.
+
+    A median over 1 to 4 pages is not comparable with a median over 40, so types with
+    fewer than `min_n` candidates are merged into one group, SMALL_TYPES, which is shown
+    but not ranked. `types` is a pandas Series of labels (NaN = unlabelled, kept as NaN)."""
+    counts = types.value_counts()
+    small = set(counts.index[counts < min_n])
+    return types.where(~types.isin(small), SMALL_TYPES)

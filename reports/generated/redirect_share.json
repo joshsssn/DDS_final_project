@@ -1,0 +1,222 @@
+{
+  "sample": "sample_seed42_n200000",
+  "n_candidates": 299,
+  "check_in_degree_equal_to_graph": true,
+  "share_redirect_only": {
+    "top20_best_hubs": {
+      "n": 20,
+      "median": 0.000636474307541591,
+      "mean": 0.003370332721403014,
+      "max": 0.027341394522200007,
+      "max_title": "Première_Guerre_mondiale"
+    },
+    "non_random_candidates": {
+      "n": 249,
+      "median": 0.0002615199539724881,
+      "mean": 0.03891829934038126,
+      "max": 1.0,
+      "max_title": "Liste_de_localités_de_Serbie"
+    },
+    "random_baseline": {
+      "n": 50,
+      "median": 0.0,
+      "mean": 0.05379700273921581,
+      "max": 1.0,
+      "max_title": "Église_Saint-Michel_de_Froidestrées"
+    }
+  },
+  "spearman_in_degree_vs_mean_detour": {
+    "with_redirects": {
+      "rho": -0.5801036593110593,
+      "p_value": 8.589931624640758e-24,
+      "n": 249
+    },
+    "direct_only": {
+      "rho": -0.583032668834481,
+      "p_value": 4.526222754628958e-24,
+      "n": 249
+    },
+    "with_redirects_without_reference": {
+      "rho": -0.8648080192817833,
+      "p_value": 9.438294620048251e-59,
+      "n": 192
+    },
+    "direct_only_without_reference": {
+      "rho": -0.8724432011253543,
+      "p_value": 5.5107771386845716e-61,
+      "n": 192
+    }
+  },
+  "spearman_in_degree_vs_direct_in_degree_candidates": {
+    "rho": 0.987559756112035,
+    "p_value": 1.8384717163763265e-200,
+    "n": 249
+  },
+  "top20_in_degree_overlap_with_vs_without_redirects": 20,
+  "top20_best_hubs": [
+    {
+      "title": "France",
+      "type": "country",
+      "mean_detour": 0.9206783785839228,
+      "in_degree": 555633,
+      "in_degree_direct": 555476,
+      "share_redirect_only": 0.00028256061105081954
+    },
+    {
+      "title": "États-Unis",
+      "type": "country",
+      "mean_detour": 1.0904910386087665,
+      "in_degree": 408575,
+      "in_degree_direct": 407754,
+      "share_redirect_only": 0.0020094229945542435
+    },
+    {
+      "title": "Paris",
+      "type": "city",
+      "mean_detour": 1.127730879407813,
+      "in_degree": 166272,
+      "in_degree_direct": 166268,
+      "share_redirect_only": 2.4056966897613547e-05
+    },
+    {
+      "title": "Canada",
+      "type": "country",
+      "mean_detour": 1.2348580873480233,
+      "in_degree": 130782,
+      "in_degree_direct": 130771,
+      "share_redirect_only": 8.410943401997217e-05
+    },
+    {
+      "title": "Italie",
+      "type": "country",
+      "mean_detour": 1.2544933708520294,
+      "in_degree": 150382,
+      "in_degree_direct": 150311,
+      "share_redirect_only": 0.0004721309731217832
+    },
+    {
+      "title": "Royaume-Uni",
+      "type": "country",
+      "mean_detour": 1.2564656374375744,
+      "in_degree": 164371,
+      "in_degree_direct": 164205,
+      "share_redirect_only": 0.001009910507327935
+    },
+    {
+      "title": "Europe",
+      "type": "continent",
+      "mean_detour": 1.299938144538974,
+      "in_degree": 86721,
+      "in_degree_direct": 86491,
+      "share_redirect_only": 0.0026521834388441093
+    },
+    {
+      "title": "Portugal",
+      "type": "country",
+      "mean_detour": 1.3122163916140643,
+      "in_degree": 38238,
+      "in_degree_direct": 38228,
+      "share_redirect_only": 0.0002615199539724881
+    },
+    {
+      "title": "New_York",
+      "type": "city",
+      "mean_detour": 1.3172814155702588,
+      "in_degree": 66687,
+      "in_degree_direct": 66192,
+      "share_redirect_only": 0.007422736065500022
+    },
+    {
+      "title": "Suisse",
+      "type": "country",
+      "mean_detour": 1.325013308996882,
+      "in_degree": 82905,
+      "in_degree_direct": 82795,
+      "share_redirect_only": 0.001326819854049816
+    },
+    {
+      "title": "Seconde_Guerre_mondiale",
+      "type": "period",
+      "mean_detour": 1.3288260197226658,
+      "in_degree": 97411,
+      "in_degree_direct": 95543,
+      "share_redirect_only": 0.01917647904240794
+    },
+    {
+      "title": "Maroc",
+      "type": "country",
+      "mean_detour": 1.3289629122620226,
+      "in_degree": 29004,
+      "in_degree_direct": 28969,
+      "share_redirect_only": 0.0012067301061922493
+    },
+    {
+      "title": "Londres",
+      "type": "city",
+      "mean_detour": 1.3363246888229776,
+      "in_degree": 75069,
+      "in_degree_direct": 75041,
+      "share_redirect_only": 0.00037299018236555703
+    },
+    {
+      "title": "Allemagne",
+      "type": "country",
+      "mean_detour": 1.337369128197328,
+      "in_degree": 158591,
+      "in_degree_direct": 158514,
+      "share_redirect_only": 0.0004855256603464257
+    },
+    {
+      "title": "Japon",
+      "type": "country",
+      "mean_detour": 1.3521940832002433,
+      "in_degree": 93395,
+      "in_degree_direct": 93387,
+      "share_redirect_only": 8.565769045452112e-05
+    },
+    {
+      "title": "Brésil",
+      "type": "country",
+      "mean_detour": 1.3630390143737166,
+      "in_degree": 59717,
+      "in_degree_direct": 59708,
+      "share_redirect_only": 0.00015071085285597066
+    },
+    {
+      "title": "Grèce",
+      "type": "country",
+      "mean_detour": 1.3634902527441883,
+      "in_degree": 36829,
+      "in_degree_direct": 36800,
+      "share_redirect_only": 0.0007874229547367563
+    },
+    {
+      "title": "Pologne",
+      "type": "country",
+      "mean_detour": 1.3746292493725758,
+      "in_degree": 100910,
+      "in_degree_direct": 100895,
+      "share_redirect_only": 0.00014864730948369834
+    },
+    {
+      "title": "Espagne",
+      "type": "country",
+      "mean_detour": 1.3795725910715644,
+      "in_degree": 110180,
+      "in_degree_direct": 109948,
+      "share_redirect_only": 0.0021056453076783443
+    },
+    {
+      "title": "Première_Guerre_mondiale",
+      "type": "period",
+      "mean_detour": 1.3806271706340152,
+      "in_degree": 63018,
+      "in_degree_direct": 61295,
+      "share_redirect_only": 0.027341394522200007
+    }
+  ],
+  "timings_s": {
+    "link targets leading to a candidate": 1.53,
+    "links to the candidates (scan of pagelinks)": 4.47
+  }
+}

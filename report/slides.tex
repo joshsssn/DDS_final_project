@@ -138,8 +138,7 @@ They head for a \emph{landmark}, then ``descend'' to the target:
 \begin{frame}{Data: the complete French Wikipedia link graph}
 \begin{columns}[T,onlytextwidth]
 \column{0.24\textwidth}\hero{\RawGB\,GB}{5 official dump tables,\\SHA-1 verified}
-\column{0.24\textwidth}\hero{14.1\,M}{pages in the dump\\(\NPagesTotal)}
-\column{0.24\textwidth}\hero{470\,M}{link rows\\(\NLinkRows)}
+\column{0.24\textwidth}\hero{14.1\,M}{pages in the dump\\(\NPagesTotal)}\column{0.24\textwidth}\hero{470\,M}{link rows\\(\NLinkRows)}
 \column{0.24\textwidth}\hero{\BiasNPages}{pages re-fetched by API\\for a bias check}
 \end{columns}
 \vspace{0.55cm}
@@ -255,7 +254,7 @@ A static graph, read only: full BFS runs, degree and title lookups.
 
 \vspace{0.2cm}
 \kicker{3. Two BFS per hub}
-$d(h,\cdot)$ and $d(\cdot,h)$ for all articles give its detour on every pair.
+$d(h,\cdot)$ and $d(\cdot,h)$ for all articles give its detour on each pair.
 \column{0.38\textwidth}
 \centering
 \includegraphics[width=\linewidth]{s_speed.pdf}\\[0.1cm]
@@ -306,7 +305,7 @@ $d(h,\cdot)$ and $d(\cdot,h)$ for all articles give its detour on every pair.
 \column{0.29\textwidth}
 \vspace{0.1cm}
 \kicker{Out-degree}
-{\small The richest pages are \textbf{lists} (cantons, post offices, deaths per year). Among candidates, more links go with a \emph{larger} detour.}
+{\small The richest pages are \textbf{lists}: among them, more links mean a \emph{larger} detour. In the other lists, links help.}
 
 \vspace{0.3cm}
 \kicker{In-degree}
@@ -326,13 +325,13 @@ $d(h,\cdot)$ and $d(\cdot,h)$ for all articles give its detour on every pair.
 \vspace{0.1cm}
 \kicker{Observation}
 \begin{itemize}\small
-  \item countries and continents first
+  \item countries first
   \item cities and periods next
   \item \emph{reference} pages (ISBN, taxonomic ranks, units): huge in-degree, mediocre hubs
   \item lists last among the large types
 \end{itemize}
 \vspace{0.2cm}
-{\footnotesize\muted{Types cover the \RhoOutDetourN{} non-random candidates. Labels assigned by hand from the page titles.}}
+{\footnotesize\muted{Types cover the \RhoOutDetourN{} non-random candidates. Labels assigned by hand from the page titles. Types with fewer than \MinTypeSize{} pages are merged and not ranked.}}
 \end{columns}
 \end{frame}
 
@@ -374,7 +373,7 @@ $d(h,\cdot)$ and $d(\cdot,h)$ for all articles give its detour on every pair.
 
 \vspace{0.3cm}
 \kicker{Sample size}
-{\small\muted{With the first \PairsOldN{} pairs only, the ranking was already close
+{\small\muted{With the first \PairsOldN{} pairs only, the ranking was close
 (rank correlation \RobustRho{} with the full sample).}}
 
 \end{columns}
@@ -400,8 +399,7 @@ $d(h,\cdot)$ and $d(\cdot,h)$ for all articles give its detour on every pair.
   \item A good hub is a page that many articles link \textbf{to}, and that links to broad sub-topics.
   \item Countries have both properties. Lists have only the second, and only inside their subject.
   \item In-degree is a better proxy than out-degree, but not a sufficient one: template-driven reference pages have a huge in-degree and are mediocre hubs.
-\end{itemize}
-\end{frame}
+\end{itemize}\end{frame}
 
 % ---------- 16. limitations & lessons --------------------------------------------------------------
 \begin{frame}{Limitations and lessons learned}
@@ -451,7 +449,7 @@ $d(h,\cdot)$ and $d(\cdot,h)$ for all articles give its detour on every pair.
 \begin{itemize}
   \item Extrapolated from the speeds measured on our laptop; not run.
   \item Storing every distance would take about \AllPairsTB\,TB at one byte each, so results would have to be aggregated on the fly.
-  \item The ranking was already stable from \PairsOldN{} to \NPairs{} pairs: the full computation is not needed for our question.
+  \item The ranking was stable from \PairsOldN{} to \NPairs{} pairs: the full computation is not needed for our question.
 \end{itemize}
 \end{frame}
 

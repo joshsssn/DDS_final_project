@@ -244,8 +244,28 @@ def main() -> None:
             "median_in_degree": float(nodes.in_degree.median()),
             "max_in_degree": int(nodes.in_degree.max()),
         }
+        write_degree_counts(nodes, path(cfg, "generated") / "degree_counts.csv")
     write_json(Q, proc / "quality.json")
     log.info("graph: %d nodes, %d edges", n, Q["edges"]["final_edges"])
+
+
+def degree_counts(nodes: pd.DataFrame) -> pd.DataFrame:
+    """Number of articles per degree value (columns: degree, n_out, n_in).
+
+    A few thousand rows instead of the 95 MB node table: this small file is versioned,
+    so the degree figure can be redrawn from a fresh copy of the repository without
+    rebuilding the graph from the dumps."""
+    out = nodes.out_degree.value_counts().rename("n_out")
+    inn = nodes.in_degree.value_counts().rename("n_in")
+    c = pd.concat([out, inn], axis=1).fillna(0).astype(np.int64).sort_index()
+    c.index.name = "degree"
+    return c.reset_index()
+
+
+def write_degree_counts(nodes: pd.DataFrame, dest) -> None:
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    degree_counts(nodes).to_csv(dest, index=False)
+    log.info("wrote %s", dest)
 
 
 if __name__ == "__main__":

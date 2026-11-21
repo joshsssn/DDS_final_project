@@ -4,8 +4,8 @@
     uv run python run.py <step> [...]   # one or several steps
     uv run python run.py all --force    # redo steps even if their outputs exist
 
-Steps (in order): download, parse, clean, store, analyze, robustness, bias, figures, numbers,
-notebook, test. The expensive steps (parse, clean, store) are skipped when their
+Steps (in order): download, parse, clean, store, analyze, robustness, bias, redirects, figures,
+numbers, notebook, test. The expensive steps (parse, clean, store) are skipped when their
 complete output exists. `download` verifies checksums itself and skips valid files.
 The other steps always run, because they are cheap or cached: `analyze` reuses the
 persistent BFS cache in data/processed/cache (wiped automatically if the graph
@@ -57,6 +57,9 @@ STEPS = {
     "analyze": (["-m", "wikigame.analysis"], None),
     "robustness": (["-m", "wikigame.analysis", "--seed", str(CFG["analysis"]["robustness_seed"])], None),
     "bias": (["-m", "wikigame.bias_check"], None),
+    # needs data/interim (parse) and the graph (clean); skipped when its output exists
+    "redirects": (["-m", "wikigame.redirect_share"],
+                  exists(ROOT / CFG["paths"]["generated"] / "redirect_share.json")),
     "figures": (["-m", "wikigame.figures"], None),
     "numbers": (["-m", "wikigame.report_numbers"], None),
     "notebook": (["-m", "jupyter", "execute", "--inplace", "notebooks/final_analysis.ipynb"], None),

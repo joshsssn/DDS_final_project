@@ -1,8 +1,7 @@
 # Decision log
 
-Every non-trivial choice of the project: what we chose, what we rejected, and why.
-Numbers quoted here come from files written by the code; the path of the file is given each
-time.
+What we chose, what we rejected, and why. Each entry names the file that holds the numbers
+quoted in it.
 
 ## 1. Project setup
 
@@ -26,8 +25,8 @@ A group contact (URL or shared address) can be added there. A personal e-mail mu
 a public repository.
 
 `download.py` saves the dump's `dumpstatus.json` next to the raw files and stops if any job of
-the dump is not `done`. The "42 jobs done" claim of `docs/provenance.md` is therefore backed by a
-file and by code, not by a reading of the web page.
+the dump is not `done`. The "42 jobs done" claim of `docs/provenance.md` is checked by code
+rather than taken from the web page.
 
 ## 3. Dump format: multi-line INSERT statements
 
@@ -35,23 +34,24 @@ file and by code, not by a reading of the web page.
   each row is on its own line (`(..),` … `(..);`). Older dumps had one huge line per statement.
   The first version of the parser assumed the old layout and found 0 rows.
 - **Choice.** `parse_sql.insert_statements` rebuilds each statement by concatenating its
-  lines. This is safe because raw newlines only occur between rows: newlines inside strings
-  are escaped as `\n`. Both layouts are unit-tested.
+  lines. Raw newlines only occur between rows: newlines inside strings are escaped as `\n`.
+  Both layouts are unit-tested.
 - **Alternative.** Import into MySQL/MariaDB. Rejected: it adds a system dependency, and the
   custom parser is validated by strict checks and tests.
 
-## 4. Parser strategy (custom streaming parser, not MySQL)
+## 4. Parser strategy (custom streaming parser)
 
 - **Choice.** A custom Python parser streams the gzip file.
   - It reads column names from each file's own `CREATE TABLE`, and a missing column is a hard error.
   - Each row is matched with a regex for exactly `ncols` values.
   - Consecutive rows must be separated by exactly one comma, and every statement must be
-    consumed entirely. Otherwise the parser raises an error instead of silently shifting columns.
+    consumed entirely. Otherwise the parser raises an error rather than shifting columns
+    silently.
   - Integer-only statements (pagelinks) take a fast numpy path, validated by a row count. They
     fall back to the strict path on any surprise.
   - Statements are parsed in 6 processes, and Parquet is written in batches.
 - **Alternatives.** Import into MySQL/MariaDB (heavy system install, slow import of ~2.8 GB of
-  compressed SQL). Or a third-party SQL parser, which is generic and not designed for multi-GB
+  compressed SQL). Or a third-party SQL parser, which is generic and not built for multi-GB
   streams.
 - **Reason.** No system software, reproducible with `uv`, and fast (page table: 14.1 M rows in 40 s,
   all five tables in 379 s; `data/interim/parse_stats.json`).
@@ -65,8 +65,8 @@ is still recorded in `data/interim/parse_stats.json`.
 ## 6. Keeping `page_latest`
 
 The revision id of each page at dump time is kept. The bias check can then ask the API for the
-**exact revision** of the dump (`oldid=`) instead of the current version, so API counts and dump
-counts describe the same text.
+**exact revision** of the dump (`oldid=`) instead of the current version, so that API counts and
+dump counts describe the same text.
 
 ## 7. DuckDB joins written as pure equi-joins
 
@@ -74,10 +74,10 @@ The first cleaning run stalled for more than 10 minutes on redirect resolution.
 - **Cause.** `EXPLAIN` showed a `BLOCKWISE_NL_JOIN` (a nested loop over 2.8 M × 2.8 M rows).
   The `LEFT JOIN … ON` clauses contained extra non-equality conditions, such as
   `coalesce(rd_interwiki,'') = ''`.
-- **Choice.** The conditions moved into filtered sub-queries, so every join is a pure equi-join
-  (a hash join).
-- **Result.** Redirect resolution now takes 2.6 s, and the whole cleaning about 6.5 min, most of
-  it sorting 236 M edges.
+- **Choice.** The conditions moved into filtered sub-queries, so that every join is a pure
+  equi-join (a hash join).
+- **Result.** Redirect resolution takes 2.6 s, and the whole cleaning about 6.5 min, most of it
+  sorting 236 M edges.
 
 ## 8. Redirect depth: 5 hops, measured maximum 3
 
@@ -87,7 +87,7 @@ The first cleaning run stalled for more than 10 minutes on redirect resolution.
 - **Alternative.** Depth 1, which mirrors MediaWiki's display behaviour: a reader who lands on a
   double redirect sees the intermediate redirect page.
 - **Reason.** Only 97 redirects are affected, so the choice has no measurable effect. Depth 5
-  keeps the graph closest to "where the link really leads".
+  keeps the graph closest to where the link really leads.
 
 ## 9. Template links are kept in the graph
 
@@ -95,7 +95,7 @@ The authority-control template ("Autorité (sciences de l'information)", 579,086
 citation templates (ISBN, DOI) create very high in-degrees.
 - **Choice.** These links are kept: they are clickable, so they are legal moves of the game.
 - **Alternative.** Remove links generated by templates. The dumps do not record which links come
-  from templates, so this would require re-parsing every page's wikitext. That means a different
+  from templates, so this would require re-parsing every page's wikitext, i.e. a different
   source and a much heavier pipeline.
 - **How we account for them.** The bias check measures their weight on a sample (§18), and the
   report discusses them as a limitation.
@@ -115,39 +115,39 @@ citation templates (ISBN, DOI) create very high in-degrees.
   of calling `np.lexsort`. Building the forward and reverse CSR from the cleaned edge list takes
   44 s instead of about 6 min (`storage_benchmark.json`). The arrays produced are identical to
   the stored graph (checked with `np.array_equal`), so the graph fingerprint and every cached
-  result remain valid.
+  result stay valid.
 - **Alternatives.**
   - `scipy.sparse.csgraph`: Dijkstra for unweighted distances, and its `breadth_first_order`
     gives no distances. It also converts the graph to float64, adding about 2 GB.
   - `numba`: extra compiled dependency.
-  - `networkx`: Python objects per edge. A rough estimate, not measured, is ~100 bytes × 236 M
-    edges ≈ 24 GB, with pure-Python traversal.
+  - `networkx`: Python objects per edge. A rough estimate, not a measurement, is ~100 bytes ×
+    236 M edges ≈ 24 GB, with pure-Python traversal.
 
 ## 11. Hub metrics: which pairs enter which statistic
 
-A hub is connected to a pair when the start reaches the hub and the hub reaches the target.
-The two cases are reported separately (`pairs_s_cannot_reach_h`, `pairs_h_cannot_reach_t`);
+A hub serves a pair when the start reaches the hub and the hub reaches the target. The two
+failure cases are reported separately (`pairs_s_cannot_reach_h`, `pairs_h_cannot_reach_t`);
 in the official sample both are **0 for all 299 candidates** (`results.json`).
 
 - **Mean and median detour** are computed over the connected pairs.
 - **On-shortest-path rate** is computed over all reachable pairs, so a pair the hub cannot
-  serve counts as "not on a shortest path".
+  serve counts as not on a shortest path.
 - **Coverage** (share of connected pairs) is reported for every hub.
-- **Coverage rule.** A hub with coverage below `analysis.min_coverage = 0.9` keeps its metrics but
-  is **not ranked** by mean detour: a mean over a handful of pairs is not comparable with the
-  others. Group statistics report both `n` and `n_rankable`. In the official sample all 299
+- **Coverage rule.** A hub with coverage below `analysis.min_coverage = 0.9` keeps its metrics
+  but is **not ranked** by mean detour: a mean over a handful of pairs cannot be compared with
+  the others. Group statistics report both `n` and `n_rankable`. In the official sample all 299
   candidates pass the threshold.
 
 ## 12. Cache validity and atomic writes
 
-The BFS cache stores node ids and distances, so it is only valid for one graph.
+The BFS cache stores node ids and distances, so it is valid for one graph only.
 `analysis.check_cache` compares a fingerprint (dump date, max redirect depth, node and edge
 counts, SHA-1 of the CSR row pointers) with the one stored in the cache, and wipes the cache on
 mismatch.
 
 Cache files are written atomically (temporary file then `os.replace`), for hub vectors and for
 the pair cache. The pair cache is checkpointed every 20,000 pairs, so an interrupted run keeps
-everything computed so far.
+the work already done.
 
 ## 13. Candidate path frequency: deterministic ties
 
@@ -156,16 +156,16 @@ The randomness is seeded per pair: `default_rng([seed, pair_index])`.
 - Many nodes tie at low frequencies, so the top-K list is ordered by (frequency desc, node id asc).
 - The number of ties at the K-th position is reported in `results.json`.
 - Choosing uniformly among predecessors at each step is *not* uniform over all shortest paths.
-  This is acceptable because the criterion only serves to *discover* candidates. Every candidate
+  This is acceptable because the criterion only serves to *discover* candidates. Each candidate
   is then evaluated with the exact, tie-free metrics (mean detour, on-shortest-path rate).
 
 ## 14. Random baseline hubs
 
-In addition to the three candidate criteria, 50 random articles (non-disambiguation, seeded) are
+Besides the three candidate criteria, 50 random articles (non-disambiguation, seeded) are
 evaluated as hubs.
 - **Reason.** The candidates are selected for having high degrees or path frequencies. A rank
   correlation computed only among them suffers from range restriction. The random articles give
-  the "ordinary page" reference level of mean detour.
+  the level of an ordinary page, for comparison.
 - **Alternative.** Evaluate every article as a hub: 2.6 M BFS runs, months of computation.
 
 ## 15. Type labels
@@ -182,6 +182,19 @@ evaluated as hubs.
 - **Limits.** The labels are a judgement on titles, not a measurement. Some types are small, and
   the border between `concept` and `reference` is debatable. The labels never enter a ranking:
   they only group the candidates in the by-type figure and tables.
+- **One file for all samples.** The file has more rows than the 299 candidates of the official
+  sample: the extra rows are candidates of the first 2,000-pair sample, which is kept and used
+  by the robustness figure. No row is unused across the three samples, so none was removed
+  (`label_rows_not_in_this_sample` in `results.json` counts them).
+- **Missing labels are reported.** `analyze` logs a warning listing each non-random candidate
+  without a label, and stores their number in `results.json` (`unlabelled_candidates`).
+  Random-baseline pages are not concerned: they never enter a by-type statistic.
+- **Small types are merged.** A median over 1 to 4 pages cannot be compared with a median over
+  40. Types with fewer than `analysis.min_type_size` (5) non-random candidates are merged into
+  one group, "small types", shown last and not ranked. In the official sample this merges
+  continent, discipline, organisation, other, person and territory (12 pages). Before this rule,
+  continents (2 pages) came first in the by-type figure. Alternative rejected: dropping the
+  small types, which would hide 12 candidates instead of showing them as uncertain.
 
 ## 16. Bidirectional BFS for pair distances
 
@@ -189,16 +202,16 @@ evaluated as hubs.
   of single-core time per pair. Sample size was limited by this.
 - **Choice.** `graph.bidirectional_distance` searches forward from `s` and backward from `t` by
   whole levels, always expanding the side with fewer edges to scan, and stops when the two searches
-  meet. The distance is exact (the argument is in the docstring).
+  meet. The distance is exact; the argument is in the docstring.
 - **Validation.**
-  - Unit test: same distance as a naive BFS for every (s, t) of 40 random graphs, and every
+  - Unit test: same distance as a naive BFS for each (s, t) of 40 random graphs, and each
     sampled path is a valid shortest path.
-  - Real graph: 400 cached pairs recomputed, 0 mismatches (8 of them unreachable).
+  - Real graph: 400 cached pairs recomputed, 0 mismatch (8 of them unreachable).
 - **Measured speed.** 6.5 ms per pair on one core, measured on those 400 pairs.
 - **What changes.** The sampled shortest path is drawn differently: a random meeting node, then
   random predecessors and successors. Pairs computed before this change (the first 2,000 of seed
-  42) keep their original sampled path. Sampled paths only serve to *discover* candidate hubs; the
-  hub metrics use exact distances and are unaffected.
+  42) keep their original sampled path. Sampled paths only serve to *discover* candidate hubs;
+  the hub metrics use exact distances and are unaffected.
 - **Alternative kept for hubs.** A hub needs its distance to *every* node, so hubs still use the
   full one-sided BFS (two per hub).
 
@@ -208,16 +221,16 @@ evaluated as hubs.
   the figures (`reports/generated/sample_seed42_n2000/`, kept in the repository).
 - **Enlargement.** The bidirectional BFS made pair distances about 290× cheaper, so seed 42 was
   extended to 200,000 pairs. Its first 2,000 pairs are the original sample (prefix property), so
-  nothing was discarded. 198,000 new pairs took 329 s with 6 processes.
-- **Candidates.** The path-frequency criterion became much less noisy: the 100th candidate appears
-  307 times, against 4 times before. The candidate set changed accordingly: 299 pages, 27 of them
-  new (countries, years, cities). They were labelled with the same grid as the others.
-- **Official sample.** `config.yaml` now has `n_pairs: 200000`, and the report, figures and
-  notebook use this sample.
+  no pair was discarded. 198,000 new pairs took 329 s with 6 processes.
+- **Candidates.** The path-frequency criterion became much less noisy: the 100th candidate
+  appears 307 times, against 4 times before. The candidate set changed with it: 299 pages, 27 of
+  them new (countries, years, cities). They were labelled with the same grid as the others.
+- **Official sample.** `config.yaml` sets `n_pairs: 200000`, and the report, figures and notebook
+  use this sample.
 - **Independent sample.** The 2,000-pair and 200,000-pair samples of seed 42 are nested, so their
   agreement does not test sampling noise. A second sample of 200,000 pairs with seed 69
-  (`analysis.robustness_seed`, step `robustness` of `run.py`) shares no pair with the first, because
-  the sampler excludes pairs already used by another seed.
+  (`analysis.robustness_seed`, step `robustness` of `run.py`) shares no pair with the first,
+  because the sampler excludes pairs already used by another seed.
   - Pairs took 332 s; 53 hubs were new (the 50 random baseline pages differ by design, plus 3 new
     candidates: 2024, Estonie, Moscou).
   - 245 candidates were evaluated in both samples. The Spearman correlation of their mean detours
@@ -226,8 +239,7 @@ evaluated as hubs.
     0.92, on a shortest path for 24.5% (seed 42) and 24.3% (seed 69) of the pairs.
   - The rank correlations with degree are the same: +0.28 / +0.29 for out-degree and −0.58 for
     in-degree.
-  - Consequence: seed 42 stays the official sample, and the second sample is reported as a
-    robustness check.
+  - Seed 42 stays the official sample; the second sample is reported as a robustness check.
 - **Labels of the second sample.** The 3 new candidates were labelled. The 50 random baseline
   pages of seed 69 are not labelled: type labels are only used for the candidates of the official
   sample.
@@ -242,39 +254,62 @@ evaluated as hubs.
   and 50 random non-disambiguation articles (seed 7).
 - **Unit.** HTML link titles are resolved exactly as in `clean.py` (redirects to their final
   article, non-articles dropped, own page excluded) before counting. Otherwise a link to X and a
-  link to a redirect of X would be counted twice and the comparison with the dump would be wrong.
+  link to a redirect of X would count twice and the comparison with the dump would be wrong.
 - **Rate.** One request every 3 s (`bias_check.sleep_seconds`), because 1 request/s got HTTP 429
-  after 14 pages. `Retry-After` and exponential backoff on 429/5xx, `maxlag=5`. Every response is
+  after 14 pages. `Retry-After` and exponential backoff on 429/5xx, `maxlag=5`. Each response is
   cached in `data/raw/api/`, so a re-run makes no request.
 - **Switch.** `bias_check.enabled: false` skips the step entirely.
 
 ## 19. Storage benchmark: identical workload for both options
 
 - **Workload.** Fixed and seeded (`analysis.seed`): one BFS source, 1,000 node ids for degree
-  lookups, 1,000 title/id lookups. Both options are built from the same cleaned edge list, and the
-  build time of each is measured from that list. The DuckDB BFS result is checked against the
-  numpy BFS (`bfs_matches_numpy: true`).
+  lookups, 1,000 title/id lookups. Both options are built from the same cleaned edge list, and
+  the build time of each is measured from that list. The DuckDB BFS result is checked against
+  the numpy BFS (`bfs_matches_numpy: true`).
 - **Timing protocol.** The CSR query timings are the best of 3; the DuckDB timings are a single
-  run. The asymmetry is deliberate (DuckDB's BFS cannot be repeated cheaply) and stated in
-  `docs/storage.md`: a warm-up effect cannot explain a 2.8–3.6× gap, so the conclusion holds.
+  run, because a DuckDB BFS cannot be repeated cheaply. A warm-up effect cannot explain a
+  2.8–3.6× gap, so the conclusion holds; `docs/storage.md` states the asymmetry.
 - **Result.** `reports/generated/storage_benchmark.json`, discussed in `docs/storage.md`.
 
 ## 20. `run.py` step skipping
 
 Only the expensive steps (parse, clean, store) are skipped, and only when their *complete* output
-exists: a partial parse is detected by looking for every table in `parse_stats.json`. The cheap or
+exists: a partial parse is detected by looking for each table in `parse_stats.json`. The cheap or
 cached steps (analyze, robustness, bias, figures, numbers, notebook) always run, so the outputs
 follow the current config and labels. `--force` redoes any step.
 
 ## 21. Figures, tables and report numbers
 
-- **No number typed by hand.** `report_numbers.py` writes every macro of
+- **No number typed by hand.** `report_numbers.py` writes each macro of
   `reports/generated/numbers.tex` and the LaTeX tables from the pipeline outputs. Medians of an
   even number of values are printed with their `.5` rather than truncated to an integer.
 - **Degree CCDF.** The denominator is all articles, including degree 0; otherwise the curve
   overstates the share of pages above a degree threshold.
-- **Observations and interpretations** are kept in separate subsections of the report. The
-  by-type statistics cover the 249 non-random candidates of the official sample.
+- **Figures redrawn from versioned files.** On a fresh copy of the repository,
+  `run.py figures` failed: the degree CCDF read the node table
+  `data/processed/graph/nodes.parquet` (95 MB, built by `clean` from the dumps, not versioned).
+  The figure only needs the number of articles per degree value, so `clean` also writes
+  `reports/generated/degree_counts.csv` (degree, n_out, n_in; about 6,300 rows, 67 KB), which is
+  versioned. `figures` recomputes it from the node table when the graph exists, and otherwise
+  reads the CSV. The curve is the same: both computations give identical arrays, and the PNG
+  files did not change. Versioning `nodes.parquet` itself was rejected: 95 MB is more than we
+  want in the repository, and the figure needs none of its titles or ids.
+- **Correlations inside each candidate list.** The four candidate lists are selected on different
+  variables (out-degree, in-degree, path frequency, chance). A Spearman correlation pooled over
+  their union mostly reflects that selection: the pooled value between out-degree and mean detour
+  is positive (0.28 over the 249 non-random candidates), while inside the lists it is positive
+  only for the top out-degree list and negative for the three others. `results.json` carries
+  `spearman_by_group`, and the report gives the value per list instead of the pooled one.
+- **In-degree with and without reference pages.** Reference pages (identifiers, units, taxonomic
+  ranks) are linked mostly from templates and infoboxes; 55 of the top 100 pages by in-degree are
+  of this type. The report gives the in-degree correlation on all non-random candidates and
+  without the 57 reference pages (−0.58 and −0.86).
+- **`pairs.csv` usable alone.** Unreachable pairs were written with the cache's uint8 sentinel
+  255, so a naive mean of `d` gave 7.56 clicks instead of 4.09. `d` is empty for them now, and
+  the Wikipedia page ids of `s` and `t` are added next to the internal node ids. The columns are
+  described in the README (data dictionary). The cache itself keeps 255.
+- **Observations and interpretations** sit in separate subsections of the report. The by-type
+  statistics cover the 249 non-random candidates of the official sample.
 
 ## 22. Notebook
 
@@ -289,7 +324,7 @@ with or without the labels file.
   backup slides).
 - **Numbers.** The slides `\input` the same generated macros as the report. No number is typed by
   hand. New macros cover the robustness check, the pair throughput before and after the
-  bidirectional BFS (read from the two analysis logs), and the cost of evaluating every pair.
+  bidirectional BFS (read from the two analysis logs), and the cost of evaluating each pair.
 - **Figures.** `slide_figures.py` draws slide-specific figures at their displayed size. It is run by
   the `figures` step.
 - **"Every pair" estimate (backup slide).** It is an extrapolation from measured speeds, not a run:
@@ -332,9 +367,46 @@ Several counts appear in this document; they do not describe the same set.
 | 245 | candidates evaluated in both seeds | `numbers.tex`, macro `SeedN` |
 | 385 | hub vectors in the BFS cache (all samples and runs together) | `data/processed/cache/hubs/` |
 
-## 26. Note on measured wall-clock times
+## 26. Measured wall-clock times
 
 The wall-clock timings logged around the first full run include a 55-minute period during which
 the laptop was suspended (16:02–16:57); the processes resumed without error and the results are
-complete. The figures quoted in this log and in the report are the compute times, not those
+complete. The figures quoted in this log and in the report are compute times, not those
 wall-clock spans. `data/processed/analysis.log` keeps the raw log of the first run.
+
+## 27. Reviewer suggestions we did not follow
+
+- **A survey of players to check the list of landmarks** (both review rounds). The project brief
+  limits us to one acquired source plus a small secondary collection, and a survey would be a new
+  dataset with its own sampling problems (who answers, which wording). It would also answer
+  another question: which pages players *believe* are landmarks, while our question compares a
+  structural proxy of that belief (out-degree, type label) with the structural optimum (detour).
+  The report states the limit: the labels are a judgement on titles, not checked against players.
+- **The English Wikipedia** (round 1: does France dominate because the edition is French?). Not
+  done, for the reasons of `docs/source_justification.md` (the edition we play in, a size that
+  fits our machine, one language to keep the scope focused). Our data show that France is the
+  best hub, but the top 15 also holds nine other countries, among them the United States in
+  second place (`table_best_hubs.tex`). A French bias would explain France's lead over the other
+  countries, not why countries as a type come first. Whether the English edition gives the same
+  ranking is left open.
+
+## 28. In-degree gained through redirect resolution
+
+- **Question** (peer review, round 2). Cleaning re-points every link to a redirect onto its final
+  article. Countries and cities have many alternative names, so this step might give them in-degree
+  that the dump does not show directly, and the hub ranking would then depend on it.
+- **Measurement.** `redirect_share.py` (step `redirects`) replays the joins of `clean.py` on the
+  interim tables for the links that lead to the 299 candidates of the official sample. For each
+  candidate it counts the source articles that link to it only through redirects: edges that
+  would not exist without redirect resolution. As a check, the recomputed in-degree must equal
+  the in-degree of the cleaned graph for each candidate, otherwise the script stops. It runs in
+  about 6 s.
+- **Result** (`reports/generated/redirect_share.json`, `.csv`). For the 20 best hubs, the median
+  share of in-degree that comes only through redirects is 0.06%, and the largest is 2.7% (Première
+  Guerre mondiale). The top 20 candidates by in-degree are the same with and without these links,
+  and the two in-degrees have a Spearman correlation of 0.988 over the 249 non-random candidates.
+  The correlation between in-degree and mean detour does not change (−0.58 in both cases).
+- **Consequence.** The hub ranking does not depend on this cleaning step. Most links to a country
+  use its own title rather than an alternative name.
+- **Limit.** Only the in-degree is recomputed. Measuring the detours without redirect resolution
+  would need a second graph and all the BFS again; given the shares above, we did not do it.

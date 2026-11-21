@@ -1,7 +1,8 @@
 """Phase 5 - figures for the report (static PNG + PDF in reports/figures/).
 
 Every figure is computed from files written by the pipeline (results.json, hubs.csv,
-quality.json, bias_check.csv, the graph's node table, labels CSV); nothing is typed in.
+quality.json, bias_check.csv, degree_counts.csv, labels CSV); nothing is typed in.
+All inputs are versioned, so `run.py figures` works on a fresh copy of the repository.
 Colours: a colour-blind-friendly palette, at most 3 hues per scatter; each group also
 has its own marker shape and a legend entry.
 """
@@ -14,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from .common import ROOT, get_logger, load_config, path, read_json
+from .common import ROOT, SMALL_TYPES, get_logger, group_small_types, load_config, path, read_json
 
 log = get_logger("figures")
 
@@ -43,16 +44,33 @@ def nice(title: str) -> str:
     return title.replace("_", " ")
 
 
-def fig_degree_ccdf(nodes, figdir):
+def load_degree_counts(cfg) -> pd.DataFrame | None:
+    """Articles per degree value. Recomputed from the node table when the graph has been
+    built (and the versioned CSV refreshed); otherwise read from the versioned CSV, so the
+    figures can be redrawn from a fresh copy of the repository without the dumps."""
+    from .clean import degree_counts
+    csv = path(cfg, "generated") / "degree_counts.csv"
+    nodes_p = path(cfg, "processed") / "graph" / "nodes.parquet"
+    if nodes_p.exists():
+        c = degree_counts(pd.read_parquet(nodes_p, columns=["out_degree", "in_degree"]))
+        c.to_csv(csv, index=False)
+        return c
+    if csv.exists():
+        log.info("graph not built: degree figure drawn from %s", csv.name)
+        return pd.read_csv(csv)
+    log.warning("neither %s nor %s found: skipping fig_degree_ccdf", nodes_p, csv)
+    return None
+
+
+def fig_degree_ccdf(counts, figdir):
     fig, ax = plt.subplots(figsize=(5.2, 3.4))
-    for col, color, label in [("out_degree", BLUE, "out-degree (links on the page)"),
-                              ("in_degree", ORANGE, "in-degree (pages linking to it)")]:
-        v = np.sort(nodes[col].to_numpy())
-        n_all = len(v)              # denominator: ALL articles, including degree 0
-        v = v[v > 0]                # degree 0 cannot be drawn on a log axis
-        x, idx = np.unique(v, return_index=True)
-        ccdf = (len(v) - idx) / n_all
-        ax.loglog(x, ccdf, color=color, lw=2, label=label)
+    for col, color, label in [("n_out", BLUE, "out-degree (links on the page)"),
+                              ("n_in", ORANGE, "in-degree (pages linking to it)")]:
+        n_all = counts[col].sum()   # denominator: ALL articles, including degree 0
+        c = counts[(counts.degree > 0) & (counts[col] > 0)].sort_values("degree")
+        # degree 0 cannot be drawn on a log axis; ccdf(k) = share of articles with degree >= k
+        ccdf = c[col].to_numpy()[::-1].cumsum()[::-1] / n_all
+        ax.loglog(c.degree.to_numpy(), ccdf, color=color, lw=2, label=label)
     ax.set_xlabel("degree k (number of distinct article links)")
     ax.set_ylabel("share of articles with degree ≥ k")
     ax.set_title("Degree distributions of the cleaned article graph (CCDF)")
@@ -117,8 +135,14 @@ def fig_detour_vs_outdegree(h, res, figdir):
     ax.set_xscale("log")
     ax.set_xlabel("out-degree (perceived 'landmark-ness'), log scale")
     ax.set_ylabel("mean detour (extra clicks via the hub)")
-    s = res["perceived_vs_real"]["spearman_out_degree_vs_mean_detour_candidates"]
-    ax.set_title(f"Link-rich pages vs good hubs (Spearman ρ = {s['rho']:.2f}, candidates n = {s['n']})")
+    # The candidate lists were selected on different variables, so a pooled correlation
+    # mixes selection effects: the title gives Spearman's rho inside each list instead.
+    bg = res["perceived_vs_real"]["spearman_by_group"]
+    r = {g: f"{bg[g]['out_degree_vs_mean_detour']['rho']:+.2f}".replace("-", "−") for g in bg}
+    ax.set_title("Link-rich pages vs good hubs. Spearman ρ inside each list of 100 (50 random):\n"
+                 f"top out-degree {r['top_out_degree']}, top in-degree {r['top_in_degree']}, "
+                 f"top path frequency {r['top_path_frequency']}, random {r['random_baseline']}",
+                 fontsize=8.5)
     ax.legend(loc="upper right", fontsize=7)
     save(fig, "fig_detour_vs_outdegree", figdir)
 
@@ -139,12 +163,24 @@ def fig_best_hubs(h, figdir, n=20):
     save(fig, "fig_best_hubs", figdir)
 
 
-def fig_detour_by_type(h, figdir):
+def typed_candidates(h, min_n):
+    """Non-random candidates with a label; types with < min_n pages merged (see common)."""
+    c = h[~h.random_baseline | h.top_out_degree | h.top_in_degree | h.top_path_frequency].dropna(subset=["type"])
+    return c.assign(type=group_small_types(c.type, min_n))
+
+
+def type_order(c, ascending=True):
+    """Types sorted by median mean detour; the merged small types always come last."""
+    med = c.groupby("type").mean_detour.median().sort_values(ascending=ascending)
+    return [t for t in med.index if t != SMALL_TYPES] + ([SMALL_TYPES] if SMALL_TYPES in med.index else [])
+
+
+def fig_detour_by_type(h, figdir, min_n):
     if "type" not in h or h.type.isna().all():
         log.warning("no type labels: skipping fig_detour_by_type")
         return
-    c = h[~h.random_baseline | h.top_out_degree | h.top_in_degree | h.top_path_frequency].dropna(subset=["type"])
-    order = c.groupby("type").mean_detour.median().sort_values().index
+    c = typed_candidates(h, min_n)
+    order = type_order(c)
     fig, ax = plt.subplots(figsize=(6.0, 3.6))
     for i, t in enumerate(order):
         y = c[c.type == t].mean_detour.to_numpy()
@@ -157,10 +193,11 @@ def fig_detour_by_type(h, figdir):
     ax.axhline(base.mean_detour.median(), color=GREY, lw=1.2, ls="--", zorder=2)
     ax.text(len(order) - 0.5, base.mean_detour.median(), "median of random articles",
             ha="right", va="bottom", fontsize=7, color=INK2)
-    ax.set_xticks(range(len(order)), order, rotation=30, ha="right")
+    names = [f"{t} (n<{min_n} each,\nnot ranked)" if t == SMALL_TYPES else t for t in order]
+    ax.set_xticks(range(len(order)), names, rotation=30, ha="right")
     ax.tick_params(axis="x", pad=11)
     ax.set_ylabel("mean detour (extra clicks)")
-    ax.set_title("Hub quality by page type (candidates; bar = median)")
+    ax.set_title(f"Hub quality by page type (candidates; bar = median; types with < {min_n} pages merged)")
     ax.grid(axis="x", visible=False)
     save(fig, "fig_detour_by_type", figdir)
 
@@ -196,13 +233,13 @@ def main() -> None:
     lab_p = ROOT / "labels" / "hub_type_labels.csv"
     if lab_p.exists():
         hubs = hubs.merge(pd.read_csv(lab_p)[["page_id", "type"]], on="page_id", how="left")
-    nodes = pd.read_parquet(path(cfg, "processed") / "graph" / "nodes.parquet",
-                            columns=["out_degree", "in_degree"])
-    fig_degree_ccdf(nodes, figdir)
+    counts = load_degree_counts(cfg)
+    if counts is not None:
+        fig_degree_ccdf(counts, figdir)
     fig_distance_distribution(res, figdir)
     fig_detour_vs_outdegree(hubs, res, figdir)
     fig_best_hubs(hubs, figdir)
-    fig_detour_by_type(hubs, figdir)
+    fig_detour_by_type(hubs, figdir, A["min_type_size"])
     if (gen / "bias_check.csv").exists():
         fig_bias_check(pd.read_csv(gen / "bias_check.csv"), figdir)
     from . import slide_figures  # figures sized for the 16:9 slides

@@ -4,9 +4,9 @@
   "top_k": 100,
   "timings_s": {
     "largest SCC": 0.01,
-    "pairs": 1.13,
+    "pairs": 1.21,
     "hub BFS": 0.02,
-    "hub metrics": 12.22
+    "hub metrics": 13.57
   },
   "graph": {
     "nodes": 2782511,
@@ -162,6 +162,58 @@
         "median_on_path_rate": 0.0
       }
     },
+    "spearman_by_group": {
+      "top_out_degree": {
+        "out_degree_vs_mean_detour": {
+          "rho": 0.2743920193752533,
+          "p_value": 0.005733272907964602,
+          "n": 100
+        },
+        "in_degree_vs_mean_detour": {
+          "rho": -0.8347934498323545,
+          "p_value": 3.809591981382274e-27,
+          "n": 100
+        }
+      },
+      "top_in_degree": {
+        "out_degree_vs_mean_detour": {
+          "rho": -0.824851705726053,
+          "p_value": 5.174483509608137e-26,
+          "n": 100
+        },
+        "in_degree_vs_mean_detour": {
+          "rho": -0.35017101710171017,
+          "p_value": 0.000354997522294813,
+          "n": 100
+        }
+      },
+      "top_path_frequency": {
+        "out_degree_vs_mean_detour": {
+          "rho": -0.5475253228755883,
+          "p_value": 3.745968050181304e-09,
+          "n": 100
+        },
+        "in_degree_vs_mean_detour": {
+          "rho": -0.35420342034203417,
+          "p_value": 0.0002998215117096416,
+          "n": 100
+        }
+      },
+      "random_baseline": {
+        "out_degree_vs_mean_detour": {
+          "rho": -0.5991259307214312,
+          "p_value": 4.2908974677408075e-06,
+          "n": 50
+        },
+        "in_degree_vs_mean_detour": {
+          "rho": -0.685082951988823,
+          "p_value": 4.07000211519691e-08,
+          "n": 50
+        }
+      }
+    },
+    "unlabelled_candidates": 0,
+    "label_rows_not_in_this_sample": 86,
     "by_type_label": {
       "city": {
         "n": 16,
@@ -242,6 +294,26 @@
         "median_on_path_rate": 0.02615757403708698
       }
     },
-    "unlabelled_candidates": 50
+    "min_type_size": 5,
+    "small_types": [
+      "continent",
+      "discipline",
+      "organisation",
+      "other",
+      "person",
+      "territory"
+    ],
+    "small_types_n": 12,
+    "n_reference_candidates": 57,
+    "spearman_in_degree_vs_mean_detour_candidates_without_reference": {
+      "rho": -0.865103890563619,
+      "p_value": 7.77856302635748e-59,
+      "n": 192
+    },
+    "spearman_out_degree_vs_mean_detour_candidates_without_reference": {
+      "rho": 0.6025416210929692,
+      "p_value": 2.3319263648980405e-20,
+      "n": 192
+    }
   }
 }

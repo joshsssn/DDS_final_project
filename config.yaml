@@ -34,6 +34,7 @@ analysis:
   top_k: 100                        # K candidates per criterion
   n_random_baseline: 50             # random articles evaluated as "baseline hubs"
   top_overlap: 50                   # size of the top-k overlap comparison
+  min_type_size: 5                  # types with fewer candidates are merged into 'small types' (not ranked)
   min_coverage: 0.9                 # hubs connected for < 90% of the pairs are not ranked by mean detour
   bfs_workers: 6                    # parallel BFS processes (graph is memory-mapped, shared)
 

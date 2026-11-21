@@ -1,14 +1,14 @@
 # Data quality assessment and cleaning
 
-Every number below is produced by code:
+The numbers below come from code:
 - `src/wikigame/clean.py` writes `data/processed/quality.json`;
 - `src/wikigame/parse_sql.py` writes `data/interim/parse_stats.json`.
 
 Percentages were computed from those files. Dump: frwiki **20261001**.
 
-The method is to **measure first, then decide**. Each transformation below is tied to a measured
-problem and to how that problem would affect our use, which is shortest-path distances between
-articles in a click game.
+We measure first, then decide. Each transformation below answers a measured problem, and the
+text says how that problem would affect our use, i.e. shortest-path distances between articles in
+a click game.
 
 ## 0. Parsing completeness
 
@@ -135,16 +135,16 @@ pages, templates…) are not moves either.
 are unreachable.
 
 *Decision.* They are **kept** and reported. Pairs without a path are counted and reported in the
-analysis, never silently dropped. Removing them would hide a real property of the graph.
+analysis rather than dropped. Removing them would hide a real property of the graph.
 
-The degree extremes already show **template effects**:
+The degree extremes show **template effects**:
 - The most-linked article is reached through the authority-control template.
 - "International Standard Book Number" (535,561 in-links) is reached through citation templates.
 - The pages with the highest out-degree are long lists.
 
 The bias check (`bias_check.py`) quantifies how much navigation templates inflate the out-degree.
 We do **not** remove template links from the graph: a player can click them, so they are real
-moves of the game. We only document the distortion and measure it.
+moves of the game. The distortion is documented and measured.
 
 ## 6. What we did not change
 

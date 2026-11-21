@@ -25,7 +25,8 @@ import numpy as np
 import pandas as pd
 from scipy.stats import spearmanr
 
-from .common import ROOT, get_logger, load_config, path, read_json, timed, write_json
+from .common import (ROOT, SMALL_TYPES, get_logger, group_small_types, load_config, path,
+                     read_json, timed, write_json)
 from .graph import UNREACHABLE, Graph, bfs, bidirectional_distance, graph_fingerprint
 
 log = get_logger("analysis")
@@ -198,6 +199,21 @@ def hub_metrics(cfg, h: int, pairs: pd.DataFrame) -> dict:
     }
 
 
+def write_pairs_csv(pairs: pd.DataFrame, nodes: pd.DataFrame, dest) -> None:
+    """Export of the evaluated pairs, readable without the (unversioned) node table.
+
+    s, t are internal node ids (row numbers of nodes.parquet, used by the cache);
+    s_page_id, t_page_id are Wikipedia page ids (stable, usable with the MediaWiki API).
+    d is the distance in clicks, left EMPTY when t is unreachable from s: the 255
+    sentinel of the uint8 cache must never leak into a mean."""
+    page = nodes.page_id.to_numpy()
+    df = pd.DataFrame({"idx": pairs.idx, "s": pairs.s, "t": pairs.t,
+                       "s_page_id": page[pairs.s], "t_page_id": page[pairs.t],
+                       "d": pd.array(pairs.d, dtype="Int64")})
+    df.loc[pairs.d.to_numpy() >= U, "d"] = pd.NA
+    df.to_csv(dest, index=False)
+
+
 def main(seed: int | None = None, n_pairs: int | None = None) -> None:
     cfg = load_config()
     A = cfg["analysis"]
@@ -240,7 +256,7 @@ def main(seed: int | None = None, n_pairs: int | None = None) -> None:
     with timed(log, "pairs", T):
         sample = get_sample(cfg, g, seed, n_pairs)
         pairs = evaluate_pairs(cfg, gdir, sample, seed)
-    pairs[["idx", "s", "t", "d"]].to_csv(out / "pairs.csv", index=False)
+    write_pairs_csv(pairs, nodes, out / "pairs.csv")
     reach = pairs.d < U
     res["pairs"] = {
         "n": len(pairs), "reachable": int(reach.sum()), "unreachable": int((~reach).sum()),
@@ -339,18 +355,44 @@ def main(seed: int | None = None, n_pairs: int | None = None) -> None:
                   "mean_on_path_rate": float(hubs[hubs[grp]].on_path_rate.mean()),
                   "median_on_path_rate": float(hubs[hubs[grp]].on_path_rate.median())}
             for grp in ["top_out_degree", "top_in_degree", "top_path_frequency", "random_baseline"]},
+        # The pooled correlation mixes four groups selected on different variables; the
+        # sign can differ inside each group, so each group is also reported on its own.
+        "spearman_by_group": {
+            grp: {"out_degree_vs_mean_detour": spear(hubs[hubs[grp]], "out_degree", "mean_detour_ranked"),
+                  "in_degree_vs_mean_detour": spear(hubs[hubs[grp]], "in_degree", "mean_detour_ranked")}
+            for grp in ["top_out_degree", "top_in_degree", "top_path_frequency", "random_baseline"]},
     }
     labels_p = ROOT / "labels" / "hub_type_labels.csv"
     if labels_p.exists():
+        PV = res["perceived_vs_real"]
         lab = pd.read_csv(labels_p)[["page_id", "type"]]
         h2 = hubs.merge(lab, on="page_id", how="left")
-        res["perceived_vs_real"]["by_type_label"] = {
+        typed = h2[~h2.random_baseline | h2.top_out_degree | h2.top_in_degree | h2.top_path_frequency]
+        # Labels are needed for the non-random candidates only (pure random-baseline pages
+        # never enter a by-type statistic). A missing label must not go unnoticed.
+        missing = typed[typed.type.isna()]
+        if len(missing):
+            log.warning("%d candidate(s) have no type label in %s and are left out of the by-type "
+                        "statistics; add them before using this sample: %s", len(missing),
+                        labels_p.name, ", ".join(missing.title.head(20)))
+        PV["unlabelled_candidates"] = int(len(missing))
+        PV["label_rows_not_in_this_sample"] = int((~lab.page_id.isin(hubs.page_id)).sum())
+        PV["by_type_label"] = {
             t: {"n": int(len(x)), "n_rankable": int(x.rankable.sum()),
                 "median_mean_detour": float(x.mean_detour_ranked.median()),
                 "median_on_path_rate": float(x.on_path_rate.median())}
-            for t, x in h2[~h2.random_baseline | h2.top_out_degree | h2.top_in_degree
-                           | h2.top_path_frequency].groupby("type")}
-        res["perceived_vs_real"]["unlabelled_candidates"] = int(h2.type.isna().sum())
+            for t, x in typed.groupby("type")}
+        min_n = A["min_type_size"]
+        grouped = group_small_types(typed.type, min_n)
+        PV["min_type_size"] = min_n
+        PV["small_types"] = sorted(set(typed.type.dropna()) - set(grouped.dropna()))
+        PV["small_types_n"] = int((grouped == SMALL_TYPES).sum())
+        # Reference pages (identifiers, units, taxonomic ranks...) are linked mostly by
+        # templates; their in-degree says little about how central they are for a player.
+        noref = typed[typed.type != "reference"]
+        PV["n_reference_candidates"] = int((typed.type == "reference").sum())
+        PV["spearman_in_degree_vs_mean_detour_candidates_without_reference"] = spear(noref, "in_degree", "mean_detour_ranked")
+        PV["spearman_out_degree_vs_mean_detour_candidates_without_reference"] = spear(noref, "out_degree", "mean_detour_ranked")
     write_json(res, out / "results.json")
     log.info("results written to %s", out)
 
